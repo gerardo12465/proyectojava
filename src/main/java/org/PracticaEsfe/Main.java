@@ -17,3 +17,5 @@ public class Main {
 }
 
 //Aaron Juarez, Hola buenos Dias participe en el proyecto.
+
+// Gerardo Barrientos, participe en el poyecto hoy tambien
