@@ -66,7 +66,7 @@ public class Autorform extends JFrame {
         inputPanel.add(txtNacionalidad, gbc);
 
         // Panel de botones
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10)); // Margen horizontal y vertical
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         btnGuardar = new JButton("Guardar");
         btnBuscar = new JButton("Buscar por ID");
         btnActualizar = new JButton("Actualizar");
@@ -81,6 +81,11 @@ public class Autorform extends JFrame {
         buttonPanel.add(btnLimpiar);
         buttonPanel.add(btnVerTodos);
 
+        JPanel topPanel = new JPanel();
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS)); // Apila verticalmente
+        topPanel.add(inputPanel); // Primero el panel de entrada
+        topPanel.add(buttonPanel);
+
         // Configuración de la tabla
         String[] columnNames = {"ID", "Nombre Completo", "Nacionalidad"};
         tableModel = new DefaultTableModel(columnNames, 0) {
@@ -94,9 +99,9 @@ public class Autorform extends JFrame {
 
         // Añadir paneles al frame principal
         setLayout(new BorderLayout(10, 10)); // Espaciado entre componentes principales
-        add(inputPanel, BorderLayout.NORTH);
-        add(buttonPanel, BorderLayout.CENTER);
-        add(scrollPane, BorderLayout.SOUTH); // La tabla abajo
+        add(topPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+
 
         // Acción de los botones
         btnGuardar.addActionListener(new ActionListener() {
@@ -137,12 +142,12 @@ public class Autorform extends JFrame {
         btnVerTodos.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cargarTodosAutores();
+                cargarTodosAutor();
             }
         });
 
         // Cargar todos los autores al iniciar la aplicación
-        cargarTodosAutores();
+        cargarTodosAutor();
     }
 
     // --- Métodos para las operaciones CRUD ---
@@ -161,7 +166,7 @@ public class Autorform extends JFrame {
             if (autorDAO.insertarAutor(autor)) {
                 JOptionPane.showMessageDialog(this, "Autor guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutores(); // Refresca la tabla
+                cargarTodosAutor(); // Refresca la tabla
             } else {
                 JOptionPane.showMessageDialog(this, "Error al guardar el autor.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -217,7 +222,7 @@ public class Autorform extends JFrame {
             if (autorDAO.actualizarAutor(autor)) {
                 JOptionPane.showMessageDialog(this, "Autor actualizado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutores(); // Refresca la tabla
+                cargarTodosAutor(); // Refresca la tabla
             } else {
                 JOptionPane.showMessageDialog(this, "Error al actualizar el autor. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -249,7 +254,7 @@ public class Autorform extends JFrame {
             if (autorDAO.eliminarAutor(id)) {
                 JOptionPane.showMessageDialog(this, "Autor eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutores(); // Refresca la tabla
+                cargarTodosAutor(); // Refresca la tabla
             } else {
                 JOptionPane.showMessageDialog(this, "Error al eliminar el autor. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -267,7 +272,7 @@ public class Autorform extends JFrame {
         txtNacionalidad.setText("");
     }
 
-    private void cargarTodosAutores() {
+    private void cargarTodosAutor() {
         // Limpia el modelo de la tabla
         tableModel.setRowCount(0);
         try {

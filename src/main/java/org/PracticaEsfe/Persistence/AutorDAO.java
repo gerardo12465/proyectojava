@@ -23,7 +23,8 @@ public class AutorDAO {
      * @throws SQLException Si ocurre un error al acceder a la base de datos.
      */
     public boolean insertarAutor(Autor autor) throws SQLException {
-        String sql = "INSERT INTO Autores (nombreCompleto, nacionalidad) VALUES (?, ?)";
+        // MODIFICADO: Cambiado 'Autores' a 'Autor'
+        String sql = "INSERT INTO Autor (nombreCompleto, nacionalidad) VALUES (?, ?)";
         Connection connection = null;
         PreparedStatement statement = null;
         boolean inserted = false;
@@ -58,7 +59,8 @@ public class AutorDAO {
      * @throws SQLException Si ocurre un error al acceder a la base de datos.
      */
     public Autor obtenerAutorPorId(int id) throws SQLException {
-        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autores WHERE id = ?";
+        // MODIFICADO: Cambiado 'Autores' a 'Autor'
+        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autor WHERE id = ?";
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -97,7 +99,8 @@ public class AutorDAO {
      * @throws SQLException Si ocurre un error al acceder a la base de datos.
      */
     public List<Autor> obtenerTodosLosAutores() throws SQLException {
-        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autores";
+        // Ya estaba correcto: 'Autor'
+        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autor";
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
@@ -137,7 +140,8 @@ public class AutorDAO {
      * @throws SQLException Si ocurre un error al acceder a la base de datos.
      */
     public boolean actualizarAutor(Autor autor) throws SQLException {
-        String sql = "UPDATE Autores SET nombreCompleto = ?, nacionalidad = ? WHERE id = ?";
+        // MODIFICADO: Cambiado 'Autores' a 'Autor'
+        String sql = "UPDATE Autor SET nombreCompleto = ?, nacionalidad = ? WHERE id = ?";
         Connection connection = null;
         PreparedStatement statement = null;
         boolean updated = false;
@@ -172,7 +176,8 @@ public class AutorDAO {
      * @throws SQLException Si ocurre un error al acceder a la base de datos.
      */
     public boolean eliminarAutor(int id) throws SQLException {
-        String sql = "DELETE FROM Autores WHERE id = ?";
+        // MODIFICADO: Cambiado 'Autores' a 'Autor'
+        String sql = "DELETE FROM Autor WHERE id = ?";
         Connection connection = null;
         PreparedStatement statement = null;
         boolean deleted = false;
