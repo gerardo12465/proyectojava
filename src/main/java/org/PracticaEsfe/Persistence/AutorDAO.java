@@ -1,6 +1,6 @@
 package org.PracticaEsfe.Persistence; // Es importante que esta clase esté en el paquete Persistence, no en presentacion
 
-import org.PracticaEsfe.Presentacion.Autor; // Importa la clase Autor
+import org.PracticaEsfe.Dominio.Autor; // <--- ¡IMPORTACIÓN AÑADIDA/CORREGIDA!
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

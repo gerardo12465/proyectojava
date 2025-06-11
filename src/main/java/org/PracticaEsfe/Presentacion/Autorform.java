@@ -1,6 +1,7 @@
 package org.PracticaEsfe.Presentacion; // Puedes crear un paquete 'ui' o 'gui' si lo prefieres
 
 import org.PracticaEsfe.Persistence.AutorDAO;
+import org.PracticaEsfe.Dominio.Autor; // Importación correcta
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -95,6 +96,8 @@ public class Autorform extends JFrame {
             }
         };
         autorTable = new JTable(tableModel);
+        // Establece una altura preferida para la tabla para que no ocupe toda la ventana
+        // autorTable.setPreferredScrollableViewportSize(new Dimension(750, 250)); // Puedes descomentar esto si la tabla es demasiado grande
         JScrollPane scrollPane = new JScrollPane(autorTable); // Para que la tabla sea scrollable
 
         // Añadir paneles al frame principal
@@ -163,7 +166,8 @@ public class Autorform extends JFrame {
 
         Autor autor = new Autor(nombre, nacionalidad);
         try {
-            if (autorDAO.insertarAutor(autor)) {
+            // CORRECCIÓN: Pasar la instancia 'autor', no la clase 'Autor'
+            if (autorDAO.insertarAutor(autor)) { // <--- ¡AQUÍ ESTÁ LA CORRECCIÓN!
                 JOptionPane.showMessageDialog(this, "Autor guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
                 cargarTodosAutor(); // Refresca la tabla
@@ -219,7 +223,8 @@ public class Autorform extends JFrame {
         try {
             int id = Integer.parseInt(idText);
             Autor autor = new Autor(id, nombre, nacionalidad);
-            if (autorDAO.actualizarAutor(autor)) {
+            // CORRECCIÓN: Pasar la instancia 'autor', no la clase 'Autor'
+            if (autorDAO.actualizarAutor(autor)) { // <--- ¡Y AQUÍ ESTÁ LA OTRA CORRECCIÓN!
                 JOptionPane.showMessageDialog(this, "Autor actualizado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
                 cargarTodosAutor(); // Refresca la tabla
