@@ -101,5 +101,5 @@ class AutoresDAOTest {
         List<Autor> autores = autorDAO.obtenerTodosLosAutores();
         assertNotNull(autores, "La lista de autores no debería ser nula.");
     }
-
+//jazmin lue, hola buenas noches participe en el proyecto
 }
