@@ -1,26 +1,25 @@
 package org.PracticaEsfe.Persistence;
 
-import java.sql.Connection; // Representa una conexión a la base de datos.
-import java.sql.DriverManager; // Gestiona los drivers JDBC y establece conexiones.
-import java.sql.SQLException; // Representa errores específicos de la base de datos.
+import java.sql.Connection; // Represents a connection to the database.
+import java.sql.DriverManager; // Manages JDBC drivers and establishes connections.
+import java.sql.SQLException; // Represents database-specific errors.
 
 /**
- * Esta clase se encarga de gestionar la conexión a la base de datos SQL Server utilizando JDBC.
- * Implementa el patrón Singleton para asegurar que solo exista una única instancia
- * de la clase y, por lo tanto, una única conexión a la base de datos compartida.
+ * This class is responsible for managing the connection to the SQL Server database using JDBC.
+ * It implements the Singleton pattern to ensure that only a single instance
+ * of the class exists and, therefore, a single shared database connection.
  */
 public class ConetionManager {
     /**
-     * Define la cadena de conexión a la base de datos. Contiene la información
-     * necesaria para establecer la comunicación con el servidor de base de datos.
-     *
-     * - jdbc:sqlserver://... : Indica el tipo de conexión (JDBC para SQL Server).
-     * - DESKTOP-9KSCT6V\\SQLEXPRESS01:1433 : Dirección del servidor y puerto.
-     * - encrypt=true : Indica si la conexión debe ser encriptada.
-     * - database=Inventario : Especifica la base de datos a la que se quiere conectar.
-     * - trustServerCertificate=true : Indica que se confíe en el certificado del servidor (para entornos de desarrollo).
-     * - user=dev : Nombre de usuario para la autenticación.
-     * - password=dev : Contraseña para la autenticación.
+     * Defines the database connection string. It contains the necessary information
+     * to establish communication with the database server.
+     * - jdbc:sqlserver://... : Indicates the type of connection (JDBC for SQL Server).
+     * - Javaproyecto.mssql.somee.com : Server address.
+     * - encrypt=true : Indicates if the connection should be encrypted.
+     * - database=Javaproyecto : Specifies the database to connect to.
+     * - trustServerCertificate=true : Indicates that the server certificate is trusted (for development environments).
+     * - user=papitafrita_SQLLogin_1 : Username for authentication.
+     * - password=ttyaep3bmy : Password for authentication.
      */
     private static final String STR_CONNECTION = "jdbc:sqlserver://Javaproyecto.mssql.somee.com;" +
             "encrypt=true;" + // Keep as true for security
@@ -29,96 +28,96 @@ public class ConetionManager {
             "user=papitafrita_SQLLogin_1;" + // Changed user
             "password=ttyaep3bmy;"; // Changed password
     /**
-     * Representa la conexión activa a la base de datos. Inicialmente es nula.
+     * Represents the active database connection. Initially it is null.
      */
     private Connection connection;
 
     /**
-     * Única instancia de la clase JDBCConnectionManager (para el patrón Singleton).
-     * Se inicializa a null y se crea solo cuando se necesita por primera vez.
+     * Unique instance of the JDBCConnectionManager class (for the Singleton pattern).
+     * It is initialized to null and created only when needed for the first time.
      */
     private static ConetionManager instance;
 
     /**
-     * Constructor privado para evitar la creación de instancias directamente desde fuera de la clase.
-     * Esto es fundamental para el patrón Singleton.
+     * Private constructor to prevent direct instantiation from outside the class.
+     * This is fundamental for the Singleton pattern.
      */
     private ConetionManager() {
         this.connection = null;
         try {
-            // Carga el driver JDBC de Microsoft SQL Server. Esto es necesario para que Java pueda
-            // comunicarse con la base de datos SQL Server.
+            // Loads the Microsoft SQL Server JDBC driver. This is necessary for Java to be able
+            // to communicate with the SQL Server database.
             Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
         } catch (ClassNotFoundException e) {
-            // Si el driver no se encuentra, se lanza una excepción indicando el error.
-            throw new RuntimeException("Error al cargar el driver JDBC de SQL Server", e);
+            // If the driver is not found, an exception is thrown indicating the error.
+            throw new RuntimeException("Error loading the SQL Server JDBC driver", e);
         }
     }
 
     /**
-     * Este método se encarga de establecer la conexión con la base de datos.
-     * Es sincronizado (`synchronized`) para asegurar que solo un hilo a la vez pueda
-     * intentar establecer la conexión, lo cual es importante en entornos multihilo.
+     * This method is responsible for establishing the connection to the database.
+     * It is synchronized to ensure that only one thread at a time can
+     * attempt to establish the connection, which is important in multithreaded environments.
      *
-     * @return La instancia de la conexión a la base de datos.
-     * @throws SQLException Si ocurre un error al intentar conectar a la base de datos.
+     * @return The database connection instance.
+     * @throws SQLException If an error occurs while trying to connect to the database.
      */
     public synchronized Connection connect() throws SQLException {
-        // Verifica si la conexión ya existe y si no está cerrada.
+        // Checks if the connection already exists and if it is not closed.
         if (this.connection == null || this.connection.isClosed()) {
             try {
-                // Intenta establecer la conexión utilizando la cadena de conexión.
+                // Attempts to establish the connection using the connection string.
                 this.connection = DriverManager.getConnection(STR_CONNECTION);
             } catch (SQLException exception) {
-                // Si ocurre un error durante la conexión, se lanza una excepción SQLException
-                // con un mensaje más descriptivo que incluye el mensaje original de la excepción.
-                throw new SQLException("Error al conectar a la base de datos: " + exception.getMessage(), exception);
+                // If an error occurs during connection, an SQLException is thrown
+                // with a more descriptive message that includes the original exception message.
+                throw new SQLException("Error connecting to the database: " + exception.getMessage(), exception);
             }
         }
-        // Retorna la conexión (ya sea la existente o la recién creada).
+        // Returns the connection (either the existing one or the newly created one).
         return this.connection;
     }
 
     /**
-     * Este método se encarga de cerrar la conexión a la base de datos.
-     * También lanza una SQLException si ocurre un error al intentar cerrar la conexión.
+     * This method is responsible for closing the database connection.
+     * It also throws an SQLException if an error occurs while trying to close the connection.
      *
-     * @throws SQLException Si ocurre un error al intentar cerrar la conexión.
+     * @throws SQLException If an error occurs while trying to close the connection.
      */
     public void disconnect() throws SQLException {
-        // Verifica si la conexión existe (no es nula).
+        // Checks if the connection exists (is not null).
         if (this.connection != null) {
             try {
-                // Intenta cerrar la conexión.
+                // Attempts to close the connection.
                 this.connection.close();
             } catch (SQLException exception) {
-                // Si ocurre un error al cerrar la conexión, se lanza una excepción SQLException
-                // con un mensaje más descriptivo.
-                throw new SQLException("Error al cerrar la conexión: " + exception.getMessage(), exception);
+                // If an error occurs while closing the connection, an SQLException is thrown
+                // with a more descriptive message.
+                throw new SQLException("Error closing the connection: " + exception.getMessage(), exception);
             } finally {
-                // El bloque finally se ejecuta siempre, independientemente de si hubo una excepción o no.
-                // Aquí se asegura que la referencia a la conexión se establezca a null,
-                // indicando que ya no hay una conexión activa gestionada por esta instancia.
+                // The finally block always executes, regardless of whether an exception occurred or not.
+                // Here, it ensures that the connection reference is set to null,
+                // indicating that there is no longer an active connection managed by this instance.
                 this.connection = null;
             }
         }
     }
 
     /**
-     * Este método estático y sincronizado (`synchronized`) implementa el patrón Singleton.
-     * Devuelve la única instancia de JDBCConnectionManager. Si la instancia aún no existe,
-     * la crea antes de devolverla. La sincronización asegura que la creación de la instancia
-     * sea segura en entornos multihilo (que varios hilos no intenten crear la instancia al mismo tiempo).
+     * This static and synchronized method implements the Singleton pattern.
+     * It returns the single instance of JDBCConnectionManager. If the instance does not yet exist,
+     * it creates a new one before returning it. Synchronization ensures that instance creation
+     * is safe in multithreaded environments (so that multiple threads do not try to create the instance at the same time).
      *
-     * @return La única instancia de JDBCConnectionManager.
+     * @return The single instance of JDBCConnectionManager.
      */
     public static synchronized ConetionManager getInstance() {
-        // Verifica si la instancia ya ha sido creada.
+        // Checks if the instance has already been created.
         if (instance == null) {
-            // Si no existe, crea una nueva instancia de JDBCConnectionManager.
+            // If it does not exist, a new instance of JDBCConnectionManager is created.
             instance = new ConetionManager();
         }
-        // Retorna la instancia existente (o la recién creada).
+        // Returns the existing (or newly created) instance.
         return instance;
     }
 }
