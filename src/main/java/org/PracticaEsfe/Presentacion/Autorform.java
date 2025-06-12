@@ -150,10 +150,14 @@ public class Autorform extends JFrame {
             return;
         }
 
-        Autor autor = new Autor(nombre, nacionalidad);
+        Autor autor = new Autor(0, nombre, nacionalidad);
         try {
-            if (autorDAO.insertarAutor(autor)) {
-                JOptionPane.showMessageDialog(this, "Autor guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            // CORRECCIÓN APLICADA AQUÍ: Se captura el objeto Autor devuelto por insertarAutor
+            Autor createdAutor = autorDAO.insertarAutor(autor);
+
+            // Se verifica si la creación fue exitosa (el objeto no es nulo y tiene un ID válido)
+            if (createdAutor != null && createdAutor.getId() > 0) {
+                JOptionPane.showMessageDialog(this, "Autor guardado exitosamente con ID: " + createdAutor.getId(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
                 cargarTodosAutor();
             } else {
@@ -208,7 +212,9 @@ public class Autorform extends JFrame {
         try {
             int id = Integer.parseInt(idText);
             Autor autor = new Autor(id, nombre, nacionalidad);
-            if (autorDAO.actualizarAutor(autor)) {
+            boolean updated = autorDAO.actualizarAutor(autor);
+
+            if (updated) {
                 JOptionPane.showMessageDialog(this, "Autor actualizado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
                 cargarTodosAutor();
@@ -239,7 +245,9 @@ public class Autorform extends JFrame {
 
         try {
             int id = Integer.parseInt(idText);
-            if (autorDAO.eliminarAutor(id)) {
+            boolean deleted = autorDAO.eliminarAutor(id);
+
+            if (deleted) {
                 JOptionPane.showMessageDialog(this, "Autor eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
                 cargarTodosAutor();

@@ -11,7 +11,7 @@ import org.PracticaEsfe.Persistence.AutorDAO;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.UUID;
 
 class AutoresDAOTest {
 
@@ -22,66 +22,83 @@ class AutoresDAOTest {
         autorDAO = new AutorDAO();
     }
 
-    private void assertAutorCreationSuccess(Autor autor) throws SQLException {
-        boolean inserted = autorDAO.insertarAutor(autor);
-        assertTrue(inserted, "La inserción del autor debería haber sido exitosa.");
+    private Autor assertAutorCreationSuccess(Autor autor) throws SQLException {
+        Autor createdAutor = autorDAO.insertarAutor(autor);
+
+        assertNotNull(createdAutor, "El autor creado no debería ser nulo.");
+        assertTrue(createdAutor.getId() > 0, "El ID del autor creado debe ser mayor que 0 (autoincrementado).");
+        assertEquals(autor.getNombreCompleto(), createdAutor.getNombreCompleto(), "El nombre completo debe coincidir.");
+        assertEquals(autor.getNacionalidad(), createdAutor.getNacionalidad(), "La nacionalidad debe coincidir.");
+
+        return createdAutor;
     }
 
     @Test
     void createAutor() throws SQLException {
-        Autor autor = new Autor(0, "Gabriel García Márquez", "Colombiana");
-        assertAutorCreationSuccess(autor);
+        String uniqueName = "Autor Test " + UUID.randomUUID().toString().substring(0, 8);
+        Autor autor = new Autor(0, uniqueName, "Colombiana");
+        Autor createdAutor = assertAutorCreationSuccess(autor);
     }
+
 
     /*
     @Test
     void readAutorById() throws SQLException {
-        Autor autorParaBuscar = new Autor(0, "Jane Austen", "Británica");
-        autorDAO.insertarAutor(autorParaBuscar);
+        String uniqueName = "Autor Read Test " + UUID.randomUUID().toString().substring(0, 8);
+        Autor autorParaCrear = new Autor(0, uniqueName, "Británica");
+        Autor autorCreado = autorDAO.insertarAutor(autorParaCrear);
+        assertNotNull(autorCreado, "El autor debería ser creado para la prueba de lectura.");
+        assertTrue(autorCreado.getId() > 0, "El autor creado debería tener un ID.");
 
-        Autor autorLeido = autorDAO.obtenerAutorPorId(1);
+        Autor autorLeido = autorDAO.obtenerAutorPorId(autorCreado.getId());
 
         assertNotNull(autorLeido, "El autor leído no debería ser nulo.");
+        assertEquals(autorCreado.getId(), autorLeido.getId(), "Los IDs deben coincidir.");
+        assertEquals(autorCreado.getNombreCompleto(), autorLeido.getNombreCompleto(), "Los nombres deben coincidir.");
+        assertEquals(autorCreado.getNacionalidad(), autorLeido.getNacionalidad(), "Las nacionalidades deben coincidir.");
+
     }
 
     @Test
     void updateAutor() throws SQLException {
-        Autor autorOriginal = new Autor(0, "Isaac Asimov", "Rusa");
-        autorDAO.insertarAutor(autorOriginal);
+        String uniqueName = "Autor Update Test " + UUID.randomUUID().toString().substring(0, 8);
+        Autor autorParaCrear = new Autor(0, uniqueName, "Rusa");
+        Autor autorOriginal = autorDAO.insertarAutor(autorParaCrear);
+        assertNotNull(autorOriginal, "El autor debería ser creado para la prueba de actualización.");
+        assertTrue(autorOriginal.getId() > 0, "El autor creado debería tener un ID.");
 
-        Autor autorDesdeDB = autorDAO.obtenerAutorPorNombreCompleto("Isaac Asimov");
-        assertNotNull(autorDesdeDB);
+        String updatedName = "Isaac Asimov (Actualizado) " + UUID.randomUUID().toString().substring(0, 4);
+        autorOriginal.setNacionalidad("Estadounidense");
+        autorOriginal.setNombreCompleto(updatedName);
 
-        autorDesdeDB.setNacionalidad("Estadounidense");
-        autorDesdeDB.setNombreCompleto("Isaac Asimov (Actualizado)");
-
-        boolean isUpdated = autorDAO.actualizarAutor(autorDesdeDB);
+        boolean isUpdated = autorDAO.actualizarAutor(autorOriginal);
         assertTrue(isUpdated, "El autor debería haberse actualizado correctamente.");
 
-        Autor autorActualizado = autorDAO.obtenerAutorPorId(autorDesdeDB.getId());
+        Autor autorActualizado = autorDAO.obtenerAutorPorId(autorOriginal.getId());
         assertNotNull(autorActualizado);
-        assertEquals("Estadounidense", autorActualizado.getNacionalidad());
-        assertEquals("Isaac Asimov (Actualizado)", autorActualizado.getNombreCompleto());
+        assertEquals(updatedName, autorActualizado.getNombreCompleto(), "El nombre completo actualizado debe coincidir.");
+        assertEquals("Estadounidense", autorActualizado.getNacionalidad(), "La nacionalidad actualizada debe coincidir.");
+
     }
 
     @Test
     void deleteAutor() throws SQLException {
-        Autor autorParaBorrar = new Autor(0, "Virginia Woolf", "Británica");
-        autorDAO.insertarAutor(autorParaBorrar);
-        Autor autorDesdeDB = autorDAO.obtenerAutorPorNombreCompleto("Virginia Woolf");
-        assertNotNull(autorDesdeDB);
+        String uniqueName = "Autor Delete Test " + UUID.randomUUID().toString().substring(0, 8);
+        Autor autorParaBorrar = new Autor(0, uniqueName, "Británica");
+        Autor createdAutor = autorDAO.insertarAutor(autorParaBorrar);
+        assertNotNull(createdAutor, "El autor debería ser creado para la prueba de eliminación.");
+        assertTrue(createdAutor.getId() > 0, "El autor creado debería tener un ID.");
 
-        boolean isDeleted = autorDAO.eliminarAutor(autorDesdeDB.getId());
+        boolean isDeleted = autorDAO.eliminarAutor(createdAutor.getId());
         assertTrue(isDeleted, "El autor debería haberse eliminado correctamente.");
 
-        Autor autorEliminado = autorDAO.obtenerAutorPorId(autorDesdeDB.getId());
+        Autor autorEliminado = autorDAO.obtenerAutorPorId(createdAutor.getId());
         assertNull(autorEliminado, "El autor eliminado no debería ser encontrado.");
     }
 
     @Test
     void getAllAutores() throws SQLException {
         List<Autor> autores = autorDAO.obtenerTodosLosAutores();
-
         assertNotNull(autores, "La lista de autores no debería ser nula.");
     }
     */

@@ -9,151 +9,160 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AutorDAO {
+    private ConetionManager conn;
 
-    public boolean insertarAutor(Autor autor) throws SQLException {
-        String sql = "INSERT INTO Autor (nombreCompleto, nacionalidad) VALUES (?, ?)";
-        Connection connection = null;
-        PreparedStatement statement = null;
-        boolean inserted = false;
+    public AutorDAO() {
+        conn = ConetionManager.getInstance();
+    }
 
-        try {
-            connection = ConetionManager.getInstance().connect();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, autor.getNombreCompleto());
-            statement.setString(2, autor.getNacionalidad());
+    // MODIFICADO: Ahora devuelve el objeto Autor con el ID generado.
+    public Autor insertarAutor(Autor autor) throws SQLException {
+        Autor createdAutor = null; // Variable para almacenar el autor con el ID
+        String sql = "INSERT INTO Autor (NombreCompleto, Nacionalidad) VALUES (?, ?)"; // Asegúrate de que las columnas coincidan con tu DB
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
 
-            int rowsAffected = statement.executeUpdate();
+            ps.setString(1, autor.getNombreCompleto());
+            ps.setString(2, autor.getNacionalidad());
+
+            int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
-                inserted = true;
+                try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        autor.setId(generatedKeys.getInt(1)); // Asigna el ID generado al objeto autor
+                    }
+                }
+                createdAutor = autor; // Asigna el autor con ID a la variable de retorno
             }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al crear el autor: " + ex.getMessage(), ex);
         } finally {
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                ConetionManager.getInstance().disconnect();
-            }
+            // Considerar cuándo es apropiado desconectar la conexión (si ConnectionManager no maneja pool)
         }
-        return inserted;
+        return createdAutor; // Devuelve el autor con el ID generado
     }
 
     public Autor obtenerAutorPorId(int id) throws SQLException {
-        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autor WHERE id = ?";
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         Autor autor = null;
+        String sql = "SELECT Id, NombreCompleto, Nacionalidad FROM Autor WHERE Id = ?";
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) { // Moved executeQuery into try-with-resources if only used once
 
-        try {
-            connection = ConetionManager.getInstance().connect();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, id);
-            resultSet = statement.executeQuery();
-
-            if (resultSet.next()) {
+            ps.setInt(1, id);
+            // Removed nested try-with-resources for ResultSet for simplicity,
+            // as outer try-with-resources for PreparedStatement already handles closing.
+            if (rs.next()) {
                 autor = new Autor();
-                autor.setId(resultSet.getInt("id"));
-                autor.setNombreCompleto(resultSet.getString("nombreCompleto"));
-                autor.setNacionalidad(resultSet.getString("nacionalidad"));
+                autor.setId(rs.getInt("Id"));
+                autor.setNombreCompleto(rs.getString("NombreCompleto"));
+                autor.setNacionalidad(rs.getString("Nacionalidad"));
             }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al buscar el autor por ID: " + ex.getMessage(), ex);
         } finally {
-            if (resultSet != null) {
-                resultSet.close();
-            }
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                ConetionManager.getInstance().disconnect();
-            }
+            // Considerar cuándo es apropiado desconectar
         }
         return autor;
     }
 
     public List<Autor> obtenerTodosLosAutores() throws SQLException {
-        String sql = "SELECT id, nombreCompleto, nacionalidad FROM Autor";
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
         List<Autor> autores = new ArrayList<>();
+        String sql = "SELECT Id, NombreCompleto, Nacionalidad FROM Autor";
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-        try {
-            connection = ConetionManager.getInstance().connect();
-            statement = connection.prepareStatement(sql);
-            resultSet = statement.executeQuery();
-
-            while (resultSet.next()) {
+            while (rs.next()) {
                 Autor autor = new Autor();
-                autor.setId(resultSet.getInt("id"));
-                autor.setNombreCompleto(resultSet.getString("nombreCompleto"));
-                autor.setNacionalidad(resultSet.getString("nacionalidad"));
+                autor.setId(rs.getInt("Id"));
+                autor.setNombreCompleto(rs.getString("NombreCompleto"));
+                autor.setNacionalidad(rs.getString("Nacionalidad"));
                 autores.add(autor);
             }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al obtener todos los autores: " + ex.getMessage(), ex);
         } finally {
-            if (resultSet != null) {
-                resultSet.close();
-            }
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                ConetionManager.getInstance().disconnect();
-            }
+            // Considerar cuándo es apropiado desconectar
         }
         return autores;
     }
 
     public boolean actualizarAutor(Autor autor) throws SQLException {
-        String sql = "UPDATE Autor SET nombreCompleto = ?, nacionalidad = ? WHERE id = ?";
-        Connection connection = null;
-        PreparedStatement statement = null;
+        String sql = "UPDATE Autor SET NombreCompleto = ?, Nacionalidad = ? WHERE Id = ?";
         boolean updated = false;
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
-        try {
-            connection = ConetionManager.getInstance().connect();
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, autor.getNombreCompleto());
-            statement.setString(2, autor.getNacionalidad());
-            statement.setInt(3, autor.getId());
+            ps.setString(1, autor.getNombreCompleto());
+            ps.setString(2, autor.getNacionalidad());
+            ps.setInt(3, autor.getId());
 
-            int rowsAffected = statement.executeUpdate();
+            int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
                 updated = true;
             }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al actualizar el autor: " + ex.getMessage(), ex);
         } finally {
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                ConetionManager.getInstance().disconnect();
-            }
+            // Considerar cuándo es apropiado desconectar
         }
         return updated;
     }
 
     public boolean eliminarAutor(int id) throws SQLException {
-        String sql = "DELETE FROM Autor WHERE id = ?";
-        Connection connection = null;
-        PreparedStatement statement = null;
+        String sql = "DELETE FROM Autor WHERE Id = ?";
         boolean deleted = false;
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
-        try {
-            connection = ConetionManager.getInstance().connect();
-            statement = connection.prepareStatement(sql);
-            statement.setInt(1, id);
-
-            int rowsAffected = statement.executeUpdate();
+            ps.setInt(1, id);
+            int rowsAffected = ps.executeUpdate();
             if (rowsAffected > 0) {
                 deleted = true;
             }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al eliminar el autor: " + ex.getMessage(), ex);
         } finally {
-            if (statement != null) {
-                statement.close();
-            }
-            if (connection != null) {
-                ConetionManager.getInstance().disconnect();
-            }
+            // Considerar cuándo es apropiado desconectar
         }
         return deleted;
+    }
+
+    // Método para obtener autor por nombre completo (útil para pruebas si necesitas ID por nombre)
+    public Autor obtenerAutorPorNombreCompleto(String nombreCompleto) throws SQLException {
+        Autor autor = null;
+        String sql = "SELECT Id, NombreCompleto, Nacionalidad FROM Autor WHERE NombreCompleto = ?";
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+
+            ps.setString(1, nombreCompleto);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    autor = new Autor();
+                    autor.setId(rs.getInt("Id"));
+                    autor.setNombreCompleto(rs.getString("NombreCompleto"));
+                    autor.setNacionalidad(rs.getString("Nacionalidad"));
+                }
+            }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al buscar autor por nombre completo: " + ex.getMessage(), ex);
+        } finally {
+            // Considerar cuándo es apropiado desconectar
+        }
+        return autor;
+    }
+
+    // Método para eliminar todos los autores (útil para limpieza de pruebas)
+    public void deleteAllAutores() throws SQLException {
+        String sql = "DELETE FROM Autor";
+        try (Connection connection = conn.connect();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new SQLException("Error al eliminar todos los autores: " + ex.getMessage(), ex);
+        } finally {
+            // Considerar cuándo es apropiado desconectar
+        }
     }
 }
