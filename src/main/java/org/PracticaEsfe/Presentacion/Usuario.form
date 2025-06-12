@@ -5,7 +5,9 @@
     <constraints>
       <xy x="20" y="20" width="500" height="432"/>
     </constraints>
-    <properties/>
+    <properties>
+      <font name="Times New Roman" size="28"/>
+    </properties>
     <border type="none"/>
     <children>
       <component id="774a6" class="javax.swing.JLabel" binding="Titulo">
@@ -14,7 +16,7 @@
         </constraints>
         <properties>
           <font name="Times New Roman" size="24"/>
-          <text value="crear Usuario"/>
+          <text value="Crear Usuario"/>
         </properties>
       </component>
       <component id="57d3b" class="javax.swing.JLabel" binding="Nombre">
