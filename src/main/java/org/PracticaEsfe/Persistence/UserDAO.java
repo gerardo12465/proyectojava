@@ -47,4 +47,38 @@ public class UserDAO {
         return res;
     }
 
+
+    public boolean update(Usuario usuario) throws SQLException{
+        boolean res = false;
+        try{
+
+            ps = conn.connect().prepareStatement(
+                    "UPDATE Usuario " +
+                            "SET Nombre = ?, Email = ?" +
+                            "WHERE id = ?"
+            );
+
+            ps.setString(1, usuario.getNombre());
+            ps.setString(2, usuario.getEmail());
+            ps.setInt(3, usuario.getId());
+
+
+            if(ps.executeUpdate() > 0){
+                res = true;
+            }
+            ps.close();
+        }catch (SQLException ex){
+
+            throw new SQLException("Error al modificar el usuario: " + ex.getMessage(), ex);
+        } finally {
+
+            ps = null;
+            conn.disconnect();
+        }
+
+        return res;
+    }
+
+
+
 }
