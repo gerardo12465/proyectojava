@@ -41,7 +41,7 @@ class AutoresDAOTest {
     }
 
 
-    /*
+
     @Test
     void readAutorById() throws SQLException {
         String uniqueName = "Autor Read Test " + UUID.randomUUID().toString().substring(0, 8);
@@ -101,5 +101,5 @@ class AutoresDAOTest {
         List<Autor> autores = autorDAO.obtenerTodosLosAutores();
         assertNotNull(autores, "La lista de autores no debería ser nula.");
     }
-    */
+
 }
