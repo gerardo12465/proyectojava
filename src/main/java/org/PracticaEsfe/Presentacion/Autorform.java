@@ -1,7 +1,7 @@
-package org.PracticaEsfe.Presentacion; // Puedes crear un paquete 'ui' o 'gui' si lo prefieres
+package org.PracticaEsfe.Presentacion;
 
 import org.PracticaEsfe.Persistence.AutorDAO;
-import org.PracticaEsfe.Dominio.Autor; // Importación correcta
+import org.PracticaEsfe.Dominio.Autor;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -18,39 +18,35 @@ public class Autorform extends JFrame {
     private JButton btnBuscar;
     private JButton btnActualizar;
     private JButton btnEliminar;
-    private JButton btnLimpiar; // Nuevo botón para limpiar campos
-    private JButton btnVerTodos; // Nuevo botón para ver todos los autores
+    private JButton btnLimpiar;
+    private JButton btnVerTodos;
     private JTable autorTable;
     private DefaultTableModel tableModel;
 
-    private AutorDAO autorDAO; // Instancia del DAO para interactuar con la base de datos
+    private AutorDAO autorDAO;
 
     public Autorform() {
-        // Configuración básica del formulario
         setTitle("Gestión de Autores");
-        setSize(800, 600); // Aumentamos el tamaño para la tabla
+        setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Centra la ventana en la pantalla
+        setLocationRelativeTo(null);
 
-        autorDAO = new AutorDAO(); // Inicializa el DAO
+        autorDAO = new AutorDAO();
 
-        // Panel para los campos de entrada y botones
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createTitledBorder("Datos del Autor"));
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5); // Espaciado entre componentes
+        gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Campo ID (solo lectura para mostrar, no para editar manualmente)
         gbc.gridx = 0;
         gbc.gridy = 0;
         inputPanel.add(new JLabel("ID:"), gbc);
         gbc.gridx = 1;
         txtId = new JTextField(15);
-        txtId.setEditable(false); // No se puede editar el ID directamente
+        txtId.setEditable(false);
         inputPanel.add(txtId, gbc);
 
-        // Campo Nombre Completo
         gbc.gridx = 0;
         gbc.gridy = 1;
         inputPanel.add(new JLabel("Nombre Completo:"), gbc);
@@ -58,7 +54,6 @@ public class Autorform extends JFrame {
         txtNombreCompleto = new JTextField(25);
         inputPanel.add(txtNombreCompleto, gbc);
 
-        // Campo Nacionalidad
         gbc.gridx = 0;
         gbc.gridy = 2;
         inputPanel.add(new JLabel("Nacionalidad:"), gbc);
@@ -66,7 +61,6 @@ public class Autorform extends JFrame {
         txtNacionalidad = new JTextField(20);
         inputPanel.add(txtNacionalidad, gbc);
 
-        // Panel de botones
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         btnGuardar = new JButton("Guardar");
         btnBuscar = new JButton("Buscar por ID");
@@ -83,30 +77,25 @@ public class Autorform extends JFrame {
         buttonPanel.add(btnVerTodos);
 
         JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS)); // Apila verticalmente
-        topPanel.add(inputPanel); // Primero el panel de entrada
+        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
+        topPanel.add(inputPanel);
         topPanel.add(buttonPanel);
 
-        // Configuración de la tabla
         String[] columnNames = {"ID", "Nombre Completo", "Nacionalidad"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Hace que las celdas de la tabla no sean editables
+                return false;
             }
         };
         autorTable = new JTable(tableModel);
-        // Establece una altura preferida para la tabla para que no ocupe toda la ventana
-        // autorTable.setPreferredScrollableViewportSize(new Dimension(750, 250)); // Puedes descomentar esto si la tabla es demasiado grande
-        JScrollPane scrollPane = new JScrollPane(autorTable); // Para que la tabla sea scrollable
+        JScrollPane scrollPane = new JScrollPane(autorTable);
 
-        // Añadir paneles al frame principal
-        setLayout(new BorderLayout(10, 10)); // Espaciado entre componentes principales
+        setLayout(new BorderLayout(10, 10));
         add(topPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
 
 
-        // Acción de los botones
         btnGuardar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -149,11 +138,8 @@ public class Autorform extends JFrame {
             }
         });
 
-        // Cargar todos los autores al iniciar la aplicación
         cargarTodosAutor();
     }
-
-    // --- Métodos para las operaciones CRUD ---
 
     private void guardarAutor() {
         String nombre = txtNombreCompleto.getText().trim();
@@ -166,11 +152,10 @@ public class Autorform extends JFrame {
 
         Autor autor = new Autor(nombre, nacionalidad);
         try {
-            // CORRECCIÓN: Pasar la instancia 'autor', no la clase 'Autor'
-            if (autorDAO.insertarAutor(autor)) { // <--- ¡AQUÍ ESTÁ LA CORRECCIÓN!
+            if (autorDAO.insertarAutor(autor)) {
                 JOptionPane.showMessageDialog(this, "Autor guardado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutor(); // Refresca la tabla
+                cargarTodosAutor();
             } else {
                 JOptionPane.showMessageDialog(this, "Error al guardar el autor.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -183,7 +168,7 @@ public class Autorform extends JFrame {
     private void buscarAutor() {
         String idText = JOptionPane.showInputDialog(this, "Ingrese el ID del autor a buscar:");
         if (idText == null || idText.trim().isEmpty()) {
-            return; // El usuario canceló o no ingresó nada
+            return;
         }
 
         try {
@@ -223,11 +208,10 @@ public class Autorform extends JFrame {
         try {
             int id = Integer.parseInt(idText);
             Autor autor = new Autor(id, nombre, nacionalidad);
-            // CORRECCIÓN: Pasar la instancia 'autor', no la clase 'Autor'
-            if (autorDAO.actualizarAutor(autor)) { // <--- ¡Y AQUÍ ESTÁ LA OTRA CORRECCIÓN!
+            if (autorDAO.actualizarAutor(autor)) {
                 JOptionPane.showMessageDialog(this, "Autor actualizado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutor(); // Refresca la tabla
+                cargarTodosAutor();
             } else {
                 JOptionPane.showMessageDialog(this, "Error al actualizar el autor. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -240,12 +224,11 @@ public class Autorform extends JFrame {
     }
 
     private void eliminarAutor() {
-        String idText = txtId.getText().trim(); // Puedes obtener el ID del campo o pedirlo
+        String idText = txtId.getText().trim();
         if (idText.isEmpty()) {
-            // Si el campo ID está vacío, pedimos al usuario que lo ingrese
             idText = JOptionPane.showInputDialog(this, "Ingrese el ID del autor a eliminar:");
             if (idText == null || idText.trim().isEmpty()) {
-                return; // El usuario canceló o no ingresó nada
+                return;
             }
         }
 
@@ -259,7 +242,7 @@ public class Autorform extends JFrame {
             if (autorDAO.eliminarAutor(id)) {
                 JOptionPane.showMessageDialog(this, "Autor eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 limpiarCampos();
-                cargarTodosAutor(); // Refresca la tabla
+                cargarTodosAutor();
             } else {
                 JOptionPane.showMessageDialog(this, "Error al eliminar el autor. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
             }
@@ -278,12 +261,11 @@ public class Autorform extends JFrame {
     }
 
     private void cargarTodosAutor() {
-        // Limpia el modelo de la tabla
         tableModel.setRowCount(0);
         try {
             List<Autor> autores = autorDAO.obtenerTodosLosAutores();
             if (autores.isEmpty()) {
-                tableModel.addRow(new Object[]{"No hay autores", "", ""}); // Mensaje en la tabla si no hay datos
+                tableModel.addRow(new Object[]{"No hay autores", "", ""});
             } else {
                 for (Autor autor : autores) {
                     Object[] rowData = {autor.getId(), autor.getNombreCompleto(), autor.getNacionalidad()};
@@ -296,9 +278,7 @@ public class Autorform extends JFrame {
         }
     }
 
-    // --- Método principal para ejecutar el formulario ---
     public static void main(String[] args) {
-        // Asegura que la UI se cree en el hilo de despacho de eventos de Swing
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

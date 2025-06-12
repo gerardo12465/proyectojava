@@ -9,7 +9,6 @@ public class Autor {
     public Autor() {
     }
 
-    // Constructor con todos los campos
     public Autor(int id, String nombreCompleto, String nacionalidad) {
         this.id = id;
         this.nombreCompleto = nombreCompleto;
@@ -21,7 +20,6 @@ public class Autor {
         this.nacionalidad = nacionalidad;
     }
 
-    // Getters y Setters
     public int getId() {
         return id;
     }
