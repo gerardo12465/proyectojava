@@ -15,10 +15,9 @@ public class AutorDAO {
         conn = ConetionManager.getInstance();
     }
 
-    // MODIFICADO: Ahora devuelve el objeto Autor con el ID generado.
     public Autor insertarAutor(Autor autor) throws SQLException {
-        Autor createdAutor = null; // Variable para almacenar el autor con el ID
-        String sql = "INSERT INTO Autor (NombreCompleto, Nacionalidad) VALUES (?, ?)"; // Asegúrate de que las columnas coincidan con tu DB
+        Autor createdAutor = null;
+        String sql = "INSERT INTO Autor (NombreCompleto, Nacionalidad) VALUES (?, ?)";
         try (Connection connection = conn.connect();
              PreparedStatement ps = connection.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
 
@@ -29,34 +28,35 @@ public class AutorDAO {
             if (rowsAffected > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
-                        autor.setId(generatedKeys.getInt(1)); // Asigna el ID generado al objeto autor
+                        autor.setId(generatedKeys.getInt(1));
                     }
                 }
-                createdAutor = autor; // Asigna el autor con ID a la variable de retorno
+                createdAutor = autor;
             }
         } catch (SQLException ex) {
             throw new SQLException("Error al crear el autor: " + ex.getMessage(), ex);
         } finally {
-            // Considerar cuándo es apropiado desconectar la conexión (si ConnectionManager no maneja pool)
+            // Considerar cuándo es apropiado desconectar
         }
-        return createdAutor; // Devuelve el autor con el ID generado
+        return createdAutor;
     }
 
     public Autor obtenerAutorPorId(int id) throws SQLException {
         Autor autor = null;
         String sql = "SELECT Id, NombreCompleto, Nacionalidad FROM Autor WHERE Id = ?";
         try (Connection connection = conn.connect();
-             PreparedStatement ps = connection.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) { // Moved executeQuery into try-with-resources if only used once
+             PreparedStatement ps = connection.prepareStatement(sql)) {
 
+            // CORRECCIÓN: Mover ps.setInt() antes de executeQuery()
             ps.setInt(1, id);
-            // Removed nested try-with-resources for ResultSet for simplicity,
-            // as outer try-with-resources for PreparedStatement already handles closing.
-            if (rs.next()) {
-                autor = new Autor();
-                autor.setId(rs.getInt("Id"));
-                autor.setNombreCompleto(rs.getString("NombreCompleto"));
-                autor.setNacionalidad(rs.getString("Nacionalidad"));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    autor = new Autor();
+                    autor.setId(rs.getInt("Id"));
+                    autor.setNombreCompleto(rs.getString("NombreCompleto"));
+                    autor.setNacionalidad(rs.getString("Nacionalidad"));
+                }
             }
         } catch (SQLException ex) {
             throw new SQLException("Error al buscar el autor por ID: " + ex.getMessage(), ex);
@@ -129,7 +129,6 @@ public class AutorDAO {
         return deleted;
     }
 
-    // Método para obtener autor por nombre completo (útil para pruebas si necesitas ID por nombre)
     public Autor obtenerAutorPorNombreCompleto(String nombreCompleto) throws SQLException {
         Autor autor = null;
         String sql = "SELECT Id, NombreCompleto, Nacionalidad FROM Autor WHERE NombreCompleto = ?";
@@ -153,7 +152,6 @@ public class AutorDAO {
         return autor;
     }
 
-    // Método para eliminar todos los autores (útil para limpieza de pruebas)
     public void deleteAllAutores() throws SQLException {
         String sql = "DELETE FROM Autor";
         try (Connection connection = conn.connect();
@@ -161,8 +159,6 @@ public class AutorDAO {
             ps.executeUpdate();
         } catch (SQLException ex) {
             throw new SQLException("Error al eliminar todos los autores: " + ex.getMessage(), ex);
-        } finally {
-            // Considerar cuándo es apropiado desconectar
         }
     }
 }
