@@ -1,57 +1,46 @@
 package org.PracticaEsfe.Presentacion;
 
 import javax.swing.*;
-import java.awt.*; // For Layout Managers and other AWT classes
-import java.awt.event.ActionEvent; // For ActionListener
-import java.awt.event.ActionListener; // For ActionListener
-import java.sql.SQLException; // For handling database exceptions
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
 
-import org.PracticaEsfe.Dominio.Usuario; // Import the Usuario domain class
-import org.PracticaEsfe.Persistence.UserDAO; // Import the UserDAO for database operations
+import org.PracticaEsfe.Dominio.Usuario;
+import org.PracticaEsfe.Persistence.UserDAO;
 
-/**
- * Represents a basic User input form using Java Swing.
- * This form allows users to input details such as Name, Email, and Password,
- * and includes buttons for interaction.
- */
-public class UserForm extends JFrame { // Extend JFrame to make this class a top-level window
+public class UserForm extends JFrame {
 
-    private JPanel mainPanel; // This will hold all other components
+    private JPanel mainPanel;
     private JLabel titleLabel;
     private JLabel nameLabel;
-    private JTextField nameField; // For Name
+    private JTextField nameField;
     private JLabel emailLabel;
-    private JTextField emailField; // For Email
+    private JTextField emailField;
     private JLabel passwordLabel;
-    private JPasswordField passwordField; // For Password
+    private JPasswordField passwordField;
     private JButton saveButton;
     private JButton cancelButton;
 
-    /**
-     * Constructor for the UserForm.
-     * Initializes the UI components and sets up the frame.
-     */
+    // Eliminamos la referencia a LoginForm para evitar circularidad
+    // private LoginForm parentLoginForm;
+
+    // Modificamos el constructor para que no reciba el LoginForm
     public UserForm() {
-        // Set the title of the JFrame
-        super("Registro de Usuario"); // Calls the JFrame constructor to set the title
-        // Set the default close operation for the frame
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        // Set the size of the frame
-        setSize(400, 300); // You can adjust these dimensions as needed
-        // Center the frame on the screen
+        super("Registro de Usuario");
+        // this.parentLoginForm = parentLoginForm; // Ya no es necesario
+
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Solo cierra esta ventana
+
+        setSize(400, 300);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        // Initialize the main panel
         mainPanel = new JPanel();
-        // Set a layout manager for the panel. GridLayout is simple for rows.
-        mainPanel.setLayout(new GridLayout(6, 2, 10, 10)); // 6 rows, 2 columns, 10px horizontal/vertical gap
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20)); // Add some padding
+        mainPanel.setLayout(new GridLayout(6, 2, 10, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
 
-        // Initialize components
         titleLabel = new JLabel("Registro de Nuevo Usuario");
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER); // Center the title text
-        // Make the title font larger and bold
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         titleLabel.setFont(new Font("Inter", Font.BOLD, 18));
 
 
@@ -62,14 +51,13 @@ public class UserForm extends JFrame { // Extend JFrame to make this class a top
         emailField = new JTextField(20);
 
         passwordLabel = new JLabel("Contraseña:");
-        passwordField = new JPasswordField(20); // JPasswordField is better for passwords
+        passwordField = new JPasswordField(20);
 
-        saveButton = new JButton("Guardar"); // Example text for button1
-        cancelButton = new JButton("Cancelar"); // Example text for button2
+        saveButton = new JButton("Guardar");
+        cancelButton = new JButton("Cancelar");
 
-        // Add components to the panel
         mainPanel.add(titleLabel);
-        mainPanel.add(new JLabel("")); // Empty label to span the title across two columns visually (for GridLayout)
+        mainPanel.add(new JLabel(""));
 
         mainPanel.add(nameLabel);
         mainPanel.add(nameField);
@@ -83,42 +71,48 @@ public class UserForm extends JFrame { // Extend JFrame to make this class a top
         mainPanel.add(saveButton);
         mainPanel.add(cancelButton);
 
-        // Add action listener to the Save button
         saveButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Get input values from the form fields
                 String name = nameField.getText();
                 String email = emailField.getText();
-                // It's crucial to convert char[] to String for JPasswordField
                 String password = new String(passwordField.getPassword());
 
-                // Basic validation (can be expanded)
                 if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
                     JOptionPane.showMessageDialog(mainPanel,
                             "Todos los campos son obligatorios.",
                             "Error de Validación",
                             JOptionPane.WARNING_MESSAGE);
-                    return; // Stop execution if fields are empty
+                    return;
                 }
 
-                // Create a new Usuario object. ID is 0 as it will be auto-generated by the DB.
-                Usuario newUser = new Usuario(0, name, email, password);
-                UserDAO userDAO = new UserDAO(); // Create an instance of UserDAO
+                UserDAO userDAO = new UserDAO();
 
                 try {
-                    // Attempt to create the user in the database
+                    Usuario existingUser = userDAO.findByEmail(email);
+                    if (existingUser != null) {
+                        JOptionPane.showMessageDialog(mainPanel,
+                                "Ya existe un usuario con este email. Por favor, use otro email.",
+                                "Error de Registro",
+                                JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+
+                    Usuario newUser = new Usuario(0, name, email, password);
                     Usuario createdUser = userDAO.create(newUser);
 
                     if (createdUser != null && createdUser.getId() > 0) {
                         JOptionPane.showMessageDialog(mainPanel,
-                                "Usuario '" + createdUser.getNombre() + "' registrado con éxito. ID: " + createdUser.getId(),
+                                "Usuario '" + createdUser.getNombre() + "' registrado con éxito. Ahora puede iniciar sesión.",
                                 "Registro Exitoso",
                                 JOptionPane.INFORMATION_MESSAGE);
-                        // Optionally clear fields after successful registration
-                        nameField.setText("");
-                        emailField.setText("");
-                        passwordField.setText("");
+
+                        dispose(); // Cierra esta ventana (UserForm)
+                        // No intentamos hacer visible el parentLoginForm aquí. Lo manejaremos desde LoginForm.
+                        // if (parentLoginForm != null) {
+                        //     parentLoginForm.setVisible(true);
+                        // }
+
                     } else {
                         JOptionPane.showMessageDialog(mainPanel,
                                 "Error al registrar el usuario. No se pudo obtener el ID.",
@@ -130,47 +124,25 @@ public class UserForm extends JFrame { // Extend JFrame to make this class a top
                             "Error de base de datos al registrar el usuario: " + ex.getMessage(),
                             "Error de Base de Datos",
                             JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace(); // Print stack trace for debugging
+                    ex.printStackTrace();
                 }
             }
         });
 
-        // Add action listener for the Cancel button
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Clear all input fields
-                nameField.setText("");
-                emailField.setText("");
-                passwordField.setText("");
-                JOptionPane.showMessageDialog(mainPanel,
-                        "Campos limpiados.",
-                        "Acción Cancelada",
-                        JOptionPane.INFORMATION_MESSAGE);
+                dispose(); // Cierra esta ventana (UserForm)
+                // No intentamos hacer visible el parentLoginForm aquí. Lo manejaremos desde LoginForm.
+                // if (parentLoginForm != null) {
+                //     parentLoginForm.setVisible(true);
+                // }
             }
         });
 
-
-        // Add the panel to the JFrame's content pane
         add(mainPanel);
-
-        // Make the frame visible
-        setVisible(true);
     }
 
-    /**
-     * Main method to run the UserForm application.
-     * Creates and displays the form on the Event Dispatch Thread (EDT).
-     * @param args Command line arguments (not used).
-     */
-    public static void main(String[] args) {
-        // Ensure that GUI updates are done on the Event Dispatch Thread
-        SwingUtilities.invokeLater(() -> {
-            new UserForm(); // Create an instance of the form
-        });
-    }
-
-    // You might want to add methods here to retrieve the input values
     public String getNameInput() {
         return nameField.getText();
     }
@@ -180,6 +152,6 @@ public class UserForm extends JFrame { // Extend JFrame to make this class a top
     }
 
     public String getPasswordInput() {
-        return new String(passwordField.getPassword()); // Recommended way to get password from JPasswordField
+        return new String(passwordField.getPassword());
     }
 }
