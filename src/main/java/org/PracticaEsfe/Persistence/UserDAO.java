@@ -142,4 +142,25 @@ public class UserDAO {
         }
         return usuario;
     }
+
+    public Usuario findByEmail(String email) throws SQLException {
+        Usuario usuario = null;
+        String sql = "SELECT Id, Nombre, Email, Contraseña FROM Usuario WHERE Email = ?";
+        try (PreparedStatement ps = conn.connect().prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    usuario = new Usuario(
+                            rs.getInt("Id"),
+                            rs.getString("Nombre"),
+                            rs.getString("Email"),
+                            rs.getString("Contraseña")
+                    );
+                }
+            }
+        } catch (SQLException ex) {
+            throw new SQLException("Error al buscar usuario por email: " + ex.getMessage(), ex);
+        }
+        return usuario;
+    }
 }
