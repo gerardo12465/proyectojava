@@ -1,6 +1,7 @@
 package org.PracticaEsfe.Presentacion;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,54 +23,87 @@ public class UserForm extends JFrame {
     private JButton saveButton;
     private JButton cancelButton;
 
-    // Eliminamos la referencia a LoginForm para evitar circularidad
-    // private LoginForm parentLoginForm;
-
-    // Modificamos el constructor para que no reciba el LoginForm
     public UserForm() {
         super("Registro de Usuario");
-        // this.parentLoginForm = parentLoginForm; // Ya no es necesario
 
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Solo cierra esta ventana
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        setSize(400, 300);
+        setSize(450, 380);
         setLocationRelativeTo(null);
 
-        mainPanel = new JPanel();
-        mainPanel.setLayout(new GridLayout(6, 2, 10, 10));
-        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        Color primaryBrown = new Color(101, 67, 33);
+        Color lightBrown = new Color(188, 152, 126);
+        Color creamWhite = new Color(245, 245, 220);
+        Color accentGold = new Color(212, 175, 55);
+        Color textDark = new Color(50, 50, 50);
 
-        titleLabel = new JLabel("Registro de Nuevo Usuario");
-        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Inter", Font.BOLD, 18));
+        mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(primaryBrown);
+        mainPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
 
+        titleLabel = new JLabel("Registro de Nuevo Usuario", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 24));
+        titleLabel.setForeground(creamWhite);
+        titleLabel.setBorder(new EmptyBorder(10, 0, 15, 0));
+
+        JPanel inputAndButtonPanel = new JPanel(new GridLayout(5, 2, 15, 15));
+        inputAndButtonPanel.setBackground(lightBrown);
+        inputAndButtonPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(primaryBrown, 5),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
 
         nameLabel = new JLabel("Nombre:");
+        nameLabel.setForeground(textDark);
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        inputAndButtonPanel.add(nameLabel);
         nameField = new JTextField(20);
+        nameField.setBackground(creamWhite);
+        nameField.setForeground(textDark);
+        nameField.setBorder(BorderFactory.createLineBorder(primaryBrown, 1));
+        inputAndButtonPanel.add(nameField);
 
         emailLabel = new JLabel("Email:");
+        emailLabel.setForeground(textDark);
+        emailLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        inputAndButtonPanel.add(emailLabel);
         emailField = new JTextField(20);
+        emailField.setBackground(creamWhite);
+        emailField.setForeground(textDark);
+        emailField.setBorder(BorderFactory.createLineBorder(primaryBrown, 1));
+        inputAndButtonPanel.add(emailField);
 
         passwordLabel = new JLabel("Contraseña:");
+        passwordLabel.setForeground(textDark);
+        passwordLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        inputAndButtonPanel.add(passwordLabel);
         passwordField = new JPasswordField(20);
+        passwordField.setBackground(creamWhite);
+        passwordField.setForeground(textDark);
+        passwordField.setBorder(BorderFactory.createLineBorder(primaryBrown, 1));
+        inputAndButtonPanel.add(passwordField);
 
         saveButton = new JButton("Guardar");
+        saveButton.setBackground(primaryBrown);
+        saveButton.setForeground(creamWhite);
+        saveButton.setFont(new Font("Arial", Font.BOLD, 14));
+        saveButton.setFocusPainted(false);
+        saveButton.setBorder(new EmptyBorder(10, 20, 10, 20));
+        inputAndButtonPanel.add(saveButton);
+
         cancelButton = new JButton("Cancelar");
+        cancelButton.setBackground(primaryBrown);
+        cancelButton.setForeground(creamWhite);
+        cancelButton.setFont(new Font("Arial", Font.BOLD, 14));
+        cancelButton.setFocusPainted(false);
+        cancelButton.setBorder(new EmptyBorder(10, 20, 10, 20));
+        inputAndButtonPanel.add(cancelButton);
 
-        mainPanel.add(titleLabel);
-        mainPanel.add(new JLabel(""));
+        mainPanel.add(titleLabel, BorderLayout.NORTH);
+        mainPanel.add(inputAndButtonPanel, BorderLayout.CENTER);
 
-        mainPanel.add(nameLabel);
-        mainPanel.add(nameField);
 
-        mainPanel.add(emailLabel);
-        mainPanel.add(emailField);
-
-        mainPanel.add(passwordLabel);
-        mainPanel.add(passwordField);
-
-        mainPanel.add(saveButton);
-        mainPanel.add(cancelButton);
+        add(mainPanel);
 
         saveButton.addActionListener(new ActionListener() {
             @Override
@@ -107,11 +141,7 @@ public class UserForm extends JFrame {
                                 "Registro Exitoso",
                                 JOptionPane.INFORMATION_MESSAGE);
 
-                        dispose(); // Cierra esta ventana (UserForm)
-                        // No intentamos hacer visible el parentLoginForm aquí. Lo manejaremos desde LoginForm.
-                        // if (parentLoginForm != null) {
-                        //     parentLoginForm.setVisible(true);
-                        // }
+                        dispose();
 
                     } else {
                         JOptionPane.showMessageDialog(mainPanel,
@@ -132,15 +162,9 @@ public class UserForm extends JFrame {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose(); // Cierra esta ventana (UserForm)
-                // No intentamos hacer visible el parentLoginForm aquí. Lo manejaremos desde LoginForm.
-                // if (parentLoginForm != null) {
-                //     parentLoginForm.setVisible(true);
-                // }
+                dispose();
             }
         });
-
-        add(mainPanel);
     }
 
     public String getNameInput() {
@@ -155,3 +179,4 @@ public class UserForm extends JFrame {
         return new String(passwordField.getPassword());
     }
 }
+

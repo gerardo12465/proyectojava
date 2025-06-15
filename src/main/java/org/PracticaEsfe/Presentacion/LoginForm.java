@@ -1,15 +1,15 @@
 package org.PracticaEsfe.Presentacion;
 
 import org.PracticaEsfe.Dominio.Usuario;
-import org.PracticaEsfe.Persistence.UserDAO;
 import org.PracticaEsfe.Main;
+import org.PracticaEsfe.Persistence.UserDAO;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.sql.SQLException;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 
 public class LoginForm extends JFrame {
     private JTextField txtEmail;
@@ -18,6 +18,14 @@ public class LoginForm extends JFrame {
     private JButton btnRegister;
     private UserDAO userDAO;
 
+    private Color primaryBrown = new Color(101, 67, 33);
+    private Color lightBrown = new Color(188, 152, 126);
+    private Color creamWhite = new Color(245, 245, 220);
+    private Color accentGold = new Color(212, 175, 55);
+    private Color textDark = new Color(50, 50, 50);
+
+    private ImageIcon backgroundImage;
+
     public LoginForm() {
         userDAO = new UserDAO();
         initComponents();
@@ -25,28 +33,49 @@ public class LoginForm extends JFrame {
 
     private void initComponents() {
         setTitle("Iniciar Sesión / Registrarse");
-        setSize(400, 300);
+        setSize(700, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        Color primaryBrown = new Color(101, 67, 33);
-        Color lightBrown = new Color(188, 152, 126);
-        Color creamWhite = new Color(245, 245, 220);
-        Color accentGold = new Color(212, 175, 55);
-        Color textDark = new Color(50, 50, 50);
+        // Configuración de la imagen de fondo
+        try {
+            // CAMBIO: Usar el nombre de archivo 'biblioteca.png'
+            backgroundImage = new ImageIcon(getClass().getResource("/images/biblioteca.png"));
+        } catch (Exception e) {
+            System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png': " + e.getMessage());
+            // Fallback: usar una imagen de placeholder si no se puede cargar
+            backgroundImage = new ImageIcon("https://placehold.co/700x500/8B4513/FFFFFF?text=Fondo+no+disponible");
+        }
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.setBackground(primaryBrown);
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
+        JPanel backgroundPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null && backgroundImage.getImage() != null) {
+                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    g.setColor(new Color(150, 100, 50, 255));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
+        backgroundPanel.setLayout(new GridBagLayout());
+
+        Color semiTransparentLightBrown = new Color(lightBrown.getRed(), lightBrown.getGreen(), lightBrown.getBlue(), 200);
+        Color semiTransparentPrimaryBrown = new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 200);
+
+        JPanel loginContentPanel = new JPanel(new BorderLayout(10, 10));
+        loginContentPanel.setBackground(semiTransparentPrimaryBrown);
+        loginContentPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         JLabel lblTitle = new JLabel("Bienvenido a la Biblioteca", SwingConstants.CENTER);
-        lblTitle.setFont(new Font("Serif", Font.BOLD, 24));
+        lblTitle.setFont(new Font("Serif", Font.BOLD, 28));
         lblTitle.setForeground(creamWhite);
         lblTitle.setBorder(new EmptyBorder(10, 0, 10, 0));
-        mainPanel.add(lblTitle, BorderLayout.NORTH);
+        loginContentPanel.add(lblTitle, BorderLayout.NORTH);
 
         JPanel inputAndButtonPanel = new JPanel(new GridLayout(4, 2, 15, 15));
-        inputAndButtonPanel.setBackground(lightBrown);
+        inputAndButtonPanel.setBackground(semiTransparentLightBrown);
         inputAndButtonPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(primaryBrown, 5),
                 new EmptyBorder(15, 15, 15, 15)
@@ -75,33 +104,34 @@ public class LoginForm extends JFrame {
         btnLogin = new JButton("Iniciar Sesión");
         btnLogin.setBackground(primaryBrown);
         btnLogin.setForeground(creamWhite);
-        btnLogin.setFont(new Font("Arial", Font.BOLD, 14));
+        btnLogin.setFont(new Font("Arial", Font.BOLD, 16));
         btnLogin.setFocusPainted(false);
-        btnLogin.setBorder(new EmptyBorder(10, 20, 10, 20));
+        btnLogin.setBorder(new EmptyBorder(12, 25, 12, 25));
         inputAndButtonPanel.add(btnLogin);
 
         btnRegister = new JButton("Registrarse");
         btnRegister.setBackground(primaryBrown);
         btnRegister.setForeground(creamWhite);
-        btnRegister.setFont(new Font("Arial", Font.BOLD, 14));
+        btnRegister.setFont(new Font("Arial", Font.BOLD, 16));
         btnRegister.setFocusPainted(false);
-        btnRegister.setBorder(new EmptyBorder(10, 20, 10, 20));
+        btnRegister.setBorder(new EmptyBorder(12, 25, 12, 25));
         inputAndButtonPanel.add(btnRegister);
 
-        mainPanel.add(inputAndButtonPanel, BorderLayout.CENTER);
+        loginContentPanel.add(inputAndButtonPanel, BorderLayout.CENTER);
 
         JLabel lblInfo = new JLabel("Ingrese sus credenciales o regístrese para continuar.", SwingConstants.CENTER);
         lblInfo.setFont(new Font("Arial", Font.ITALIC, 12));
         lblInfo.setForeground(creamWhite);
         lblInfo.setBorder(new EmptyBorder(10, 0, 0, 0));
-        mainPanel.add(lblInfo, BorderLayout.SOUTH);
+        loginContentPanel.add(lblInfo, BorderLayout.SOUTH);
 
-        add(mainPanel);
+        backgroundPanel.add(loginContentPanel);
+        add(backgroundPanel);
 
         btnLogin.addActionListener(e -> attemptLogin());
         btnRegister.addActionListener(e -> {
             this.setVisible(false);
-            UserForm userForm = new UserForm(); // Correcto: Llama al constructor sin argumentos
+            UserForm userForm = new UserForm();
             userForm.setVisible(true);
 
             userForm.addWindowListener(new WindowAdapter() {
@@ -119,21 +149,29 @@ public class LoginForm extends JFrame {
         String password = new String(txtPassword.getPassword());
 
         if (email.isEmpty() || password.isEmpty()) {
+            setJOptionPaneColors(new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 200), creamWhite);
             JOptionPane.showMessageDialog(this, "Por favor, ingrese su email y contraseña.", "Campos Vacíos", JOptionPane.WARNING_MESSAGE);
+            resetJOptionPaneColors();
             return;
         }
 
         try {
             Usuario user = userDAO.findByEmailAndPassword(email, password);
             if (user != null) {
+                setJOptionPaneColors(new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 200), creamWhite);
                 JOptionPane.showMessageDialog(this, "¡Bienvenido, " + user.getNombre() + "!", "Inicio de Sesión Exitoso", JOptionPane.INFORMATION_MESSAGE);
+                resetJOptionPaneColors();
                 this.dispose();
                 new Main().setVisible(true);
             } else {
+                setJOptionPaneColors(new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 200), creamWhite);
                 JOptionPane.showMessageDialog(this, "Credenciales incorrectas. Verifique su email y contraseña.", "Error de Inicio de Sesión", JOptionPane.ERROR_MESSAGE);
+                resetJOptionPaneColors();
             }
         } catch (SQLException ex) {
+            setJOptionPaneColors(new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 200), creamWhite);
             JOptionPane.showMessageDialog(this, "Error de base de datos al iniciar sesión: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
             ex.printStackTrace();
         }
     }
@@ -143,10 +181,29 @@ public class LoginForm extends JFrame {
         txtPassword.setText("");
     }
 
+    private void setJOptionPaneColors(Color backgroundColor, Color foregroundColor) {
+        UIManager.put("OptionPane.background", backgroundColor);
+        UIManager.put("Panel.background", backgroundColor);
+        UIManager.put("OptionPane.messageForeground", foregroundColor);
+        UIManager.put("Button.background", new Color(primaryBrown.getRed(), primaryBrown.getGreen(), primaryBrown.getBlue(), 255));
+        UIManager.put("Button.foreground", creamWhite);
+        UIManager.put("Button.border", BorderFactory.createLineBorder(accentGold, 1));
+        UIManager.put("Button.font", new Font("Arial", Font.BOLD, 12));
+    }
+
+    private void resetJOptionPaneColors() {
+        UIManager.put("OptionPane.background", null);
+        UIManager.put("Panel.background", null);
+        UIManager.put("OptionPane.messageForeground", null);
+        UIManager.put("Button.background", null);
+        UIManager.put("Button.foreground", null);
+        UIManager.put("Button.border", null);
+        UIManager.put("Button.font", null);
+    }
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new LoginForm().setVisible(true);
         });
     }
 }
-
