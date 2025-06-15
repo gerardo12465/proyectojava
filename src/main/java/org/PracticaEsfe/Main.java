@@ -11,7 +11,7 @@ public class Main extends JFrame {
 
     public Main() {
         setTitle("Menú Principal");
-        setSize(500, 150);
+        setSize(600, 150); // Aumentamos el tamaño para acomodar el nuevo botón
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -40,6 +40,7 @@ public class Main extends JFrame {
         SwingUtilities.invokeLater(() -> new Main().setVisible(true));
     }
 }
+
 
 
 //Aaron Juarez, Hola buenos Dias participe en el proyecto.
