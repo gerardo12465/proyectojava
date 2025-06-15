@@ -158,4 +158,12 @@ public class UserDAO {
         }
         return users;
     }
+    public void deleteAllUsers() throws SQLException {
+        String sql = "DELETE FROM Usuario";
+        try (PreparedStatement ps = conn.connect().prepareStatement(sql)) {
+            ps.executeUpdate();
+        } catch (SQLException ex) {
+            throw new SQLException("Error al eliminar todos los usuarios: " + ex.getMessage(), ex);
+        }
+    }
 }
