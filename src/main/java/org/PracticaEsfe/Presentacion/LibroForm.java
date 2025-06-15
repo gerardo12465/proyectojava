@@ -39,6 +39,7 @@ public class LibroForm extends JDialog {
         setModal(true); // Hace el JDialog modal, bloqueando la ventana padre
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cierra solo esta ventana
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         libroDAO = new LibroDAO(); // Inicializa el DAO de libros
         autorDAO = new AutorDAO(); // Inicializa el DAO de autores (si se necesita para mostrar nombres)

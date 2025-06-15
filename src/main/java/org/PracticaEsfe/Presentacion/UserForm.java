@@ -40,6 +40,7 @@ public class UserForm extends JFrame { // Extend JFrame to make this class a top
         setSize(400, 300); // You can adjust these dimensions as needed
         // Center the frame on the screen
         setLocationRelativeTo(null);
+        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         // Initialize the main panel
         mainPanel = new JPanel();
