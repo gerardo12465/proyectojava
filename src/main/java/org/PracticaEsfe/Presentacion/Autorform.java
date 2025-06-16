@@ -13,7 +13,8 @@ import java.awt.*;
 import java.sql.SQLException;
 import java.util.List;
 
-public class Autorform extends JFrame {
+// Importante: Ahora Autorform extiende JPanel, no JFrame
+public class Autorform extends JPanel {
     private AutorDAO autorDAO;
     private DefaultTableModel tableModel;
     private JTable autoresTable;
@@ -27,27 +28,33 @@ public class Autorform extends JFrame {
     private JButton btnEliminar;
 
     private ImageIcon backgroundImage;
+    private Main parentFrame; // Referencia al JFrame principal
 
-    public Autorform() {
+    // Constructor modificado para aceptar la referencia al JFrame principal
+    public Autorform(Main parentFrame) {
+        this.parentFrame = parentFrame;
         autorDAO = new AutorDAO();
         initComponents();
         loadAutores();
     }
 
     private void initComponents() {
-        setTitle("Registro de Autores"); // ¡CAMBIO AQUÍ!
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
-        // this.setResizable(false); // Eliminado para permitir redimensionar la ventana
+        // Eliminado: setTitle, setSize, setDefaultCloseOperation, setLocationRelativeTo, setResizable
+        // Estas propiedades son gestionadas por el JFrame principal (Main)
 
         try {
             backgroundImage = new ImageIcon(getClass().getResource("/images/biblioteca.png"));
+            if (backgroundImage.getImageLoadStatus() == MediaTracker.ERRORED) {
+                System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png' para Autorform: " + getClass().getResource("/images/biblioteca.png"));
+                // Fallback image if local fails
+                backgroundImage = new ImageIcon("https://placehold.co/800x600/8B4513/FFFFFF?text=Fondo+no+disponible");
+            }
         } catch (Exception e) {
-            System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png' para Autorform: " + e.getMessage());
-            // Fallback image or a solid color background
+            System.err.println("Excepción al cargar la imagen de fondo local 'biblioteca.png': " + e.getMessage());
+            // Fallback image if exception occurs
             backgroundImage = new ImageIcon("https://placehold.co/800x600/8B4513/FFFFFF?text=Fondo+no+disponible");
         }
+
 
         JPanel backgroundPanel = new JPanel() {
             @Override
@@ -62,6 +69,9 @@ public class Autorform extends JFrame {
             }
         };
         backgroundPanel.setLayout(new GridBagLayout());
+        // Importante: El contenido principal del formulario se añade a 'this' (el JPanel de Autorform)
+        this.setLayout(new BorderLayout()); // Asegura que el Autorform JPanel tenga un layout
+        this.setOpaque(false); // Hace que el JPanel de Autorform sea transparente para mostrar el fondo
 
         JPanel mainContentWrapper = new JPanel(new BorderLayout());
         mainContentWrapper.setOpaque(false);
@@ -71,7 +81,7 @@ public class Autorform extends JFrame {
         headerPanel.setOpaque(false);
         headerPanel.setBorder(new EmptyBorder(0, 0, 15, 0));
 
-        JLabel formTitle = new JLabel("Registro de Autores", SwingConstants.CENTER); // ¡Y TAMBIÉN AQUÍ!
+        JLabel formTitle = new JLabel("Registro de Autores", SwingConstants.CENTER);
         formTitle.setFont(new Font("Serif", Font.BOLD, 28));
         formTitle.setForeground(PaletaColores.CREAM_WHITE);
         headerPanel.add(formTitle, BorderLayout.CENTER);
@@ -268,7 +278,9 @@ public class Autorform extends JFrame {
         mainGbc.anchor = GridBagConstraints.CENTER;
         backgroundPanel.add(mainContentWrapper, mainGbc);
 
-        add(backgroundPanel);
+        // Añade el backgroundPanel al Autorform JPanel
+        this.add(backgroundPanel, BorderLayout.CENTER);
+
 
         btnGuardar.addActionListener(e -> guardarAutor());
         btnActualizar.addActionListener(e -> actualizarAutor());
@@ -276,8 +288,8 @@ public class Autorform extends JFrame {
         btnEliminar.addActionListener(e -> eliminarAutor());
 
         btnRegresar.addActionListener(e -> {
-            dispose();
-            new Main().setVisible(true);
+            // Ya no dispose() esta ventana, sino que le indicamos al Main que cambie al menú principal
+            parentFrame.showPanel("MainMenu");
         });
 
         autoresTable.getSelectionModel().addListSelectionListener(e -> {

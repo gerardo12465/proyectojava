@@ -20,7 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LibroForm extends JFrame {
+// Importante: Ahora LibroForm extiende JPanel, no JFrame
+public class LibroForm extends JPanel {
     private LibroDAO libroDAO;
     private AutorDAO autorDAO;
     private DefaultTableModel tableModel;
@@ -40,8 +41,11 @@ public class LibroForm extends JFrame {
     private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     private ImageIcon backgroundImage;
+    private Main parentFrame; // Referencia al JFrame principal
 
-    public LibroForm() {
+    // Constructor modificado para aceptar la referencia al JFrame principal
+    public LibroForm(Main parentFrame) {
+        this.parentFrame = parentFrame;
         libroDAO = new LibroDAO();
         autorDAO = new AutorDAO();
         autorMap = new HashMap<>();
@@ -51,16 +55,19 @@ public class LibroForm extends JFrame {
     }
 
     private void initComponents() {
-        setTitle("Gestión de Libros");
-        setSize(800, 600);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
+        // Eliminado: setTitle, setSize, setDefaultCloseOperation, setLocationRelativeTo
+        // Estas propiedades son gestionadas por el JFrame principal (Main)
 
         try {
             backgroundImage = new ImageIcon(getClass().getResource("/images/biblioteca.png"));
+            if (backgroundImage.getImageLoadStatus() == MediaTracker.ERRORED) {
+                System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png' para LibroForm: " + getClass().getResource("/images/biblioteca.png"));
+                // Fallback image if local fails
+                backgroundImage = new ImageIcon("https://placehold.co/800x600/8B4513/FFFFFF?text=Fondo+no+disponible");
+            }
         } catch (Exception e) {
-            System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png' para LibroForm: " + e.getMessage());
-            // Fallback image or a solid color background
+            System.err.println("Excepción al cargar la imagen de fondo local 'biblioteca.png': " + e.getMessage());
+            // Fallback image if exception occurs
             backgroundImage = new ImageIcon("https://placehold.co/800x600/8B4513/FFFFFF?text=Fondo+no+disponible");
         }
 
@@ -77,6 +84,9 @@ public class LibroForm extends JFrame {
             }
         };
         backgroundPanel.setLayout(new GridBagLayout());
+        // Importante: El contenido principal del formulario se añade a 'this' (el JPanel de LibroForm)
+        this.setLayout(new BorderLayout()); // Asegura que el LibroForm JPanel tenga un layout
+        this.setOpaque(false); // Hace que el JPanel de LibroForm sea transparente para mostrar el fondo
 
         JPanel mainContentWrapper = new JPanel(new BorderLayout());
         mainContentWrapper.setOpaque(false);
@@ -307,7 +317,8 @@ public class LibroForm extends JFrame {
         mainGbc.anchor = GridBagConstraints.CENTER;
         backgroundPanel.add(mainContentWrapper, mainGbc);
 
-        add(backgroundPanel);
+        // Añade el backgroundPanel al LibroForm JPanel
+        this.add(backgroundPanel, BorderLayout.CENTER);
 
         // --- Event Listeners ---
         btnGuardar.addActionListener(e -> guardarLibro());
@@ -316,8 +327,8 @@ public class LibroForm extends JFrame {
         btnLimpiar.addActionListener(e -> clearFields());
 
         btnRegresar.addActionListener(e -> {
-            dispose();
-            new Main().setVisible(true);
+            // Ya no dispose() esta ventana, sino que le indicamos al Main que cambie al menú principal
+            parentFrame.showPanel("MainMenu");
         });
 
         librosTable.getSelectionModel().addListSelectionListener(e -> {
@@ -397,7 +408,6 @@ public class LibroForm extends JFrame {
             }
 
             Libro libro = new Libro(titulo, fechaPublicacion, idAutor);
-            // Changed from libroDAO.insertLibro to libroDAO.create
             Libro createdLibro = libroDAO.create(libro);
             if (createdLibro != null) {
                 setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
@@ -442,7 +452,6 @@ public class LibroForm extends JFrame {
             }
 
             Libro libro = new Libro(id, titulo, fechaPublicacion, idAutor);
-            // Changed from libroDAO.updateLibro to libroDAO.update
             boolean updated = libroDAO.update(libro);
             if (updated) {
                 setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
@@ -483,7 +492,6 @@ public class LibroForm extends JFrame {
         if (confirm == JOptionPane.YES_OPTION) {
             int id = Integer.parseInt(txtId.getText());
             try {
-                // Changed from libroDAO.deleteLibro to libroDAO.delete
                 boolean deleted = libroDAO.delete(id);
                 if (deleted) {
                     setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
