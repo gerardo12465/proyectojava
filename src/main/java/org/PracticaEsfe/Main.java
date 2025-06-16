@@ -3,6 +3,7 @@ package org.PracticaEsfe;
 import org.PracticaEsfe.Presentacion.Autorform;
 import org.PracticaEsfe.Presentacion.LibroForm;
 import org.PracticaEsfe.Presentacion.UserForm;
+import org.PracticaEsfe.Presentacion.PrestamoForm;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,15 +22,18 @@ public class Main extends JFrame {
         JButton btnAutores = new JButton("Autores");
         JButton btnLibros = new JButton("Libros");
         JButton btnUsuarios = new JButton("Usuarios");
+        JButton btnPrestamos = new JButton("Prestamos");
 
         // Acciones para abrir formularios
         btnAutores.addActionListener(e -> new Autorform().setVisible(true));
         btnLibros.addActionListener(e -> new LibroForm().setVisible(true));
         btnUsuarios.addActionListener(e -> new UserForm().setVisible(true));
+        btnPrestamos.addActionListener(e -> new PrestamoForm().setVisible(true));
 
         panelBotones.add(btnAutores);
         panelBotones.add(btnLibros);
         panelBotones.add(btnUsuarios);
+        panelBotones.add(btnPrestamos);
 
         // Agregamos el panel a la parte superior
         setLayout(new BorderLayout());
