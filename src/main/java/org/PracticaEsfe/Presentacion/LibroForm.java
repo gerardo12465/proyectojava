@@ -1,358 +1,434 @@
 package org.PracticaEsfe.Presentacion;
 
-import org.PracticaEsfe.Persistence.LibroDAO; // Importar LibroDAO
-import org.PracticaEsfe.Dominio.Libro;     // Importar Libro del dominio
-import org.PracticaEsfe.Dominio.Autor;     // Posiblemente necesario para mostrar el autor en la tabla o selección
-import org.PracticaEsfe.Persistence.AutorDAO; // Posiblemente necesario para obtener nombres de autor
+import org.PracticaEsfe.Dominio.Autor;
+import org.PracticaEsfe.Dominio.Libro;
+import org.PracticaEsfe.Persistence.AutorDAO;
+import org.PracticaEsfe.Persistence.LibroDAO;
+import org.PracticaEsfe.Utilidades.PaletaColores; // Importa la paleta de colores
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.sql.Date; // Para manejar java.sql.Date para FechaPublicacion
+import java.sql.Date;
 import java.sql.SQLException;
-import java.time.LocalDate; // Para facilitar la creación de fechas
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-public class LibroForm extends JDialog {
-    private JPanel MainPanel; // Renombrado a MainPanel si es el panel principal de JDialog
-    private JTextField txtId; // Campo para el ID del libro (no editable)
-    private JTextField txtTitulo; // Campo para el título del libro
-    private JTextField txtFechaPublicacion; // Campo para la fecha de publicación
-    private JTextField txtIdAutor; // Campo para el ID del autor
+public class LibroForm extends JFrame {
+    private LibroDAO libroDAO;
+    private AutorDAO autorDAO;
+    private DefaultTableModel tableModel;
+    private JTable librosTable;
+
+    private JTextField txtId;
+    private JTextField txtTitulo;
+    private JTextField txtFechaPublicacion;
+    private JComboBox<String> cmbAutor;
+    private Map<String, Integer> autorMap;
+
     private JButton btnGuardar;
-    private JButton btnBuscar;
     private JButton btnActualizar;
     private JButton btnEliminar;
     private JButton btnLimpiar;
-    private JButton btnVerTodos;
-    private JTable libroTable;
-    private DefaultTableModel tableModel;
 
-    private LibroDAO libroDAO; // Instancia del DAO para interactuar con la base de datos
-    private AutorDAO autorDAO; // Opcional: para obtener nombres de autores si se muestran en la tabla
+    private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+    private ImageIcon backgroundImage; // Para la imagen de fondo
 
     public LibroForm() {
+        libroDAO = new LibroDAO();
+        autorDAO = new AutorDAO();
+        autorMap = new HashMap<>();
+        initComponents();
+        loadAutoresToComboBox();
+        loadLibros();
+    }
+
+    private void initComponents() {
         setTitle("Gestión de Libros");
-        setSize(900, 700); // Aumentamos el tamaño para más campos y la tabla
-        setModal(true); // Hace el JDialog modal, bloqueando la ventana padre
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Cierra solo esta ventana
+        setSize(800, 600); // Aumentado para el diseño
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
-        libroDAO = new LibroDAO(); // Inicializa el DAO de libros
-        autorDAO = new AutorDAO(); // Inicializa el DAO de autores (si se necesita para mostrar nombres)
+        // Carga la imagen de fondo
+        try {
+            backgroundImage = new ImageIcon(getClass().getResource("/images/biblioteca.png"));
+        } catch (Exception e) {
+            System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png' para LibroForm: " + e.getMessage());
+            backgroundImage = new ImageIcon("https://placehold.co/800x600/8B4513/FFFFFF?text=Fondo+no+disponible");
+        }
 
-        // Configuración de los paneles
-        MainPanel = new JPanel(new BorderLayout(10, 10));
-        MainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); // Margen alrededor del panel
+        JPanel backgroundPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (backgroundImage != null && backgroundImage.getImage() != null) {
+                    g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    g.setColor(PaletaColores.PRIMARY_BROWN);
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
+        backgroundPanel.setLayout(new GridBagLayout());
+
+        // Panel de contenido principal con transparencia
+        JPanel contentAreaPanel = new JPanel(new BorderLayout(15, 15));
+        contentAreaPanel.setBackground(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN);
+        contentAreaPanel.setBorder(new EmptyBorder(25, 25, 25, 25));
+
+        // Título del formulario
+        JLabel formTitle = new JLabel("Gestión de Libros", SwingConstants.CENTER);
+        formTitle.setFont(new Font("Serif", Font.BOLD, 28));
+        formTitle.setForeground(PaletaColores.CREAM_WHITE);
+        formTitle.setBorder(new EmptyBorder(0, 0, 15, 0)); // Espacio inferior
+        contentAreaPanel.add(formTitle, BorderLayout.NORTH);
 
         // Panel de entrada de datos
-        JPanel inputPanel = new JPanel(new GridBagLayout());
-        inputPanel.setBorder(BorderFactory.createTitledBorder("Datos del Libro"));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        JPanel inputPanel = new JPanel(new GridLayout(5, 2, 10, 10));
+        inputPanel.setBackground(PaletaColores.SEMI_TRANSPARENT_LIGHT_BROWN);
+        inputPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 3),
+                new EmptyBorder(15, 15, 15, 15)
+        ));
 
-        // Campo ID
-        gbc.gridx = 0; gbc.gridy = 0;
-        inputPanel.add(new JLabel("ID:"), gbc);
-        gbc.gridx = 1;
-        txtId = new JTextField(15);
+        // Etiquetas y campos de texto con estilo
+        JLabel lblId = new JLabel("ID:");
+        lblId.setForeground(PaletaColores.TEXT_DARK);
+        lblId.setFont(new Font("Serif", Font.BOLD, 14));
+        inputPanel.add(lblId);
+        txtId = new JTextField();
         txtId.setEditable(false);
-        inputPanel.add(txtId, gbc);
+        txtId.setBackground(PaletaColores.CREAM_WHITE);
+        txtId.setForeground(PaletaColores.TEXT_DARK);
+        txtId.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
+        inputPanel.add(txtId);
 
-        // Campo Título
-        gbc.gridx = 0; gbc.gridy = 1;
-        inputPanel.add(new JLabel("Título:"), gbc);
-        gbc.gridx = 1;
-        txtTitulo = new JTextField(30);
-        inputPanel.add(txtTitulo, gbc);
+        JLabel lblTitulo = new JLabel("Título:");
+        lblTitulo.setForeground(PaletaColores.TEXT_DARK);
+        lblTitulo.setFont(new Font("Serif", Font.BOLD, 14));
+        inputPanel.add(lblTitulo);
+        txtTitulo = new JTextField();
+        txtTitulo.setBackground(PaletaColores.CREAM_WHITE);
+        txtTitulo.setForeground(PaletaColores.TEXT_DARK);
+        txtTitulo.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
+        inputPanel.add(txtTitulo);
 
-        // Campo Fecha Publicación
-        gbc.gridx = 0; gbc.gridy = 2;
-        inputPanel.add(new JLabel("Fecha Publicación (YYYY-MM-DD):"), gbc);
-        gbc.gridx = 1;
-        txtFechaPublicacion = new JTextField(20);
-        inputPanel.add(txtFechaPublicacion, gbc);
+        JLabel lblFechaPublicacion = new JLabel("Fecha Publicación (YYYY-MM-DD):");
+        lblFechaPublicacion.setForeground(PaletaColores.TEXT_DARK);
+        lblFechaPublicacion.setFont(new Font("Serif", Font.BOLD, 14));
+        inputPanel.add(lblFechaPublicacion);
+        txtFechaPublicacion = new JTextField();
+        txtFechaPublicacion.setBackground(PaletaColores.CREAM_WHITE);
+        txtFechaPublicacion.setForeground(PaletaColores.TEXT_DARK);
+        txtFechaPublicacion.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
+        inputPanel.add(txtFechaPublicacion);
 
-        // Campo ID Autor
-        gbc.gridx = 0; gbc.gridy = 3;
-        inputPanel.add(new JLabel("ID Autor:"), gbc);
-        gbc.gridx = 1;
-        txtIdAutor = new JTextField(15);
-        inputPanel.add(txtIdAutor, gbc);
+        JLabel lblAutor = new JLabel("Autor:");
+        lblAutor.setForeground(PaletaColores.TEXT_DARK);
+        lblAutor.setFont(new Font("Serif", Font.BOLD, 14));
+        inputPanel.add(lblAutor);
+        cmbAutor = new JComboBox<>();
+        cmbAutor.setBackground(PaletaColores.CREAM_WHITE);
+        cmbAutor.setForeground(PaletaColores.TEXT_DARK);
+        cmbAutor.setFont(new Font("Serif", Font.PLAIN, 14));
+        cmbAutor.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
+        inputPanel.add(cmbAutor);
 
         // Panel de botones
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        buttonPanel.setBackground(new Color(0,0,0,0)); // Transparente
+
         btnGuardar = new JButton("Guardar");
-        btnBuscar = new JButton("Buscar por ID");
+        btnGuardar.setBackground(PaletaColores.PRIMARY_BROWN);
+        btnGuardar.setForeground(PaletaColores.CREAM_WHITE);
+        btnGuardar.setFont(new Font("Serif", Font.BOLD, 14));
+        btnGuardar.setFocusPainted(false);
+        btnGuardar.setBorder(new EmptyBorder(10, 20, 10, 20));
+
         btnActualizar = new JButton("Actualizar");
+        btnActualizar.setBackground(PaletaColores.PRIMARY_BROWN);
+        btnActualizar.setForeground(PaletaColores.CREAM_WHITE);
+        btnActualizar.setFont(new Font("Serif", Font.BOLD, 14));
+        btnActualizar.setFocusPainted(false);
+        btnActualizar.setBorder(new EmptyBorder(10, 20, 10, 20));
+
         btnEliminar = new JButton("Eliminar");
-        btnLimpiar = new JButton("Limpiar");
-        btnVerTodos = new JButton("Ver Todos");
+        btnEliminar.setBackground(PaletaColores.PRIMARY_BROWN);
+        btnEliminar.setForeground(PaletaColores.CREAM_WHITE);
+        btnEliminar.setFont(new Font("Serif", Font.BOLD, 14));
+        btnEliminar.setFocusPainted(false);
+        btnEliminar.setBorder(new EmptyBorder(10, 20, 10, 20));
+
+        btnLimpiar = new JButton("Limpiar Campos");
+        btnLimpiar.setBackground(PaletaColores.PRIMARY_BROWN);
+        btnLimpiar.setForeground(PaletaColores.CREAM_WHITE);
+        btnLimpiar.setFont(new Font("Serif", Font.BOLD, 14));
+        btnLimpiar.setFocusPainted(false);
+        btnLimpiar.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         buttonPanel.add(btnGuardar);
-        buttonPanel.add(btnBuscar);
         buttonPanel.add(btnActualizar);
         buttonPanel.add(btnEliminar);
         buttonPanel.add(btnLimpiar);
-        buttonPanel.add(btnVerTodos);
 
-        // Combinar inputPanel y buttonPanel en un panel superior
-        JPanel topPanel = new JPanel();
-        topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.Y_AXIS));
-        topPanel.add(inputPanel);
-        topPanel.add(buttonPanel);
-
-        MainPanel.add(topPanel, BorderLayout.NORTH);
-
-        // Configuración de la tabla de libros
-        String[] columnNames = {"ID", "Título", "Fecha Publicación", "ID Autor", "Nombre Autor"}; // Añadimos Nombre Autor
-        tableModel = new DefaultTableModel(columnNames, 0) {
+        // Tabla de libros
+        tableModel = new DefaultTableModel(new Object[]{"ID", "Título", "Fecha Publicación", "ID Autor", "Nombre Autor"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Las celdas de la tabla no son editables
+                return false;
             }
         };
-        libroTable = new JTable(tableModel);
-        JScrollPane scrollPane = new JScrollPane(libroTable);
-        MainPanel.add(scrollPane, BorderLayout.CENTER);
+        librosTable = new JTable(tableModel);
+        librosTable.setBackground(PaletaColores.CREAM_WHITE);
+        librosTable.setForeground(PaletaColores.TEXT_DARK);
+        librosTable.setFont(new Font("Serif", Font.PLAIN, 12));
+        librosTable.getTableHeader().setBackground(PaletaColores.PRIMARY_BROWN);
+        librosTable.getTableHeader().setForeground(PaletaColores.CREAM_WHITE);
+        librosTable.getTableHeader().setFont(new Font("Serif", Font.BOLD, 13));
 
-        // Añadir MainPanel al JDialog
-        add(MainPanel);
+        JScrollPane scrollPane = new JScrollPane(librosTable);
+        scrollPane.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 2),
+                "Lista de Libros",
+                TitledBorder.CENTER,
+                TitledBorder.TOP,
+                new Font("Serif", Font.BOLD, 16),
+                PaletaColores.CREAM_WHITE
+        ));
+        scrollPane.setBackground(PaletaColores.SEMI_TRANSPARENT_LIGHT_BROWN);
+        scrollPane.getViewport().setBackground(PaletaColores.CREAM_WHITE);
+
+        // Añadir componentes al contentAreaPanel
+        contentAreaPanel.add(inputPanel, BorderLayout.CENTER);
+        contentAreaPanel.add(buttonPanel, BorderLayout.SOUTH); // Botones debajo del panel de entrada
+        contentAreaPanel.add(scrollPane, BorderLayout.EAST); // Tabla a la derecha (ajusta según preferencia)
 
 
-        // Acciones de los botones
-        btnGuardar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                guardarLibro();
+        backgroundPanel.add(contentAreaPanel); // Añade el panel de contenido al panel de fondo
+        add(backgroundPanel); // Añade el panel de fondo al JFrame
+
+        // --- Event Listeners ---
+        btnGuardar.addActionListener(e -> guardarLibro());
+        btnActualizar.addActionListener(e -> actualizarLibro());
+        btnEliminar.addActionListener(e -> eliminarLibro());
+        btnLimpiar.addActionListener(e -> clearFields());
+
+        librosTable.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting() && librosTable.getSelectedRow() != -1) {
+                int selectedRow = librosTable.getSelectedRow();
+                txtId.setText(librosTable.getValueAt(selectedRow, 0).toString());
+                txtTitulo.setText(librosTable.getValueAt(selectedRow, 1).toString());
+                txtFechaPublicacion.setText(librosTable.getValueAt(selectedRow, 2).toString());
+                String selectedAutorNombre = librosTable.getValueAt(selectedRow, 4).toString();
+                cmbAutor.setSelectedItem(selectedAutorNombre);
             }
         });
-
-        btnBuscar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                buscarLibro();
-            }
-        });
-
-        btnActualizar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                actualizarLibro();
-            }
-        });
-
-        btnEliminar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                eliminarLibro();
-            }
-        });
-
-        btnLimpiar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                limpiarCampos();
-            }
-        });
-
-        btnVerTodos.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cargarTodosLibros();
-            }
-        });
-
-        // Cargar todos los libros al iniciar el formulario
-        cargarTodosLibros();
     }
 
-    // --- Métodos para las operaciones CRUD ---
-
-    private void guardarLibro() {
-        String titulo = txtTitulo.getText().trim();
-        String fechaPublicacionStr = txtFechaPublicacion.getText().trim();
-        String idAutorStr = txtIdAutor.getText().trim();
-
-        if (titulo.isEmpty() || fechaPublicacionStr.isEmpty() || idAutorStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor, complete todos los campos.", "Campos Vacíos", JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
+    private void loadAutoresToComboBox() {
         try {
-            Date fechaPublicacion = Date.valueOf(LocalDate.parse(fechaPublicacionStr)); // Convierte String a Date
-            int idAutor = Integer.parseInt(idAutorStr);
-
-            Libro libro = new Libro(titulo, fechaPublicacion, idAutor); // ID 0 para nuevo libro
-            Libro createdLibro = libroDAO.create(libro); // El DAO debería devolver el libro con el ID generado
-
-            if (createdLibro != null && createdLibro.getId() > 0) {
-                JOptionPane.showMessageDialog(this, "Libro guardado exitosamente con ID: " + createdLibro.getId(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos();
-                cargarTodosLibros(); // Refresca la tabla
-            } else {
-                JOptionPane.showMessageDialog(this, "Error al guardar el libro.", "Error", JOptionPane.ERROR_MESSAGE);
+            List<Autor> autores = autorDAO.obtenerTodosLosAutores();
+            cmbAutor.removeAllItems();
+            autorMap.clear();
+            for (Autor autor : autores) {
+                cmbAutor.addItem(autor.getNombreCompleto());
+                autorMap.put(autor.getNombreCompleto(), autor.getId());
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "ID Autor inválido. Por favor, ingrese un número entero.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, "Formato de fecha inválido. Use YYYY-MM-DD.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error de base de datos al guardar: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Error al cargar autores para el ComboBox: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
             ex.printStackTrace();
         }
     }
 
-    private void buscarLibro() {
-        String idText = JOptionPane.showInputDialog(this, "Ingrese el ID del libro a buscar:");
-        if (idText == null || idText.trim().isEmpty()) {
+    private void loadLibros() {
+        tableModel.setRowCount(0);
+        try {
+            List<Libro> libros = libroDAO.getAllLibros();
+            for (Libro libro : libros) {
+                String autorNombre = "Desconocido";
+                Autor autor = autorDAO.obtenerAutorPorId(libro.getIdAutor());
+                if (autor != null) {
+                    autorNombre = autor.getNombreCompleto();
+                }
+                tableModel.addRow(new Object[]{
+                        libro.getId(),
+                        libro.getTitulo(),
+                        libro.getFechaPublicacion(),
+                        libro.getIdAutor(),
+                        autorNombre
+                });
+            }
+        } catch (SQLException ex) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Error al cargar libros: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
+            ex.printStackTrace();
+        }
+    }
+
+    private void guardarLibro() {
+        if (txtTitulo.getText().isEmpty() || txtFechaPublicacion.getText().isEmpty() || cmbAutor.getSelectedItem() == null) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Por favor, complete todos los campos y seleccione un autor.", "Campos Vacíos", JOptionPane.WARNING_MESSAGE);
+            resetJOptionPaneColors();
             return;
         }
 
         try {
-            int id = Integer.parseInt(idText.trim());
-            Libro libro = libroDAO.findById(id);
-            if (libro != null) {
-                txtId.setText(String.valueOf(libro.getId()));
-                txtTitulo.setText(libro.getTitulo());
-                txtFechaPublicacion.setText(libro.getFechaPublicacion().toString());
-                txtIdAutor.setText(String.valueOf(libro.getIdAutor()));
-                JOptionPane.showMessageDialog(this, "Libro encontrado: " + libro.getTitulo(), "Libro Encontrado", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                limpiarCampos();
-                JOptionPane.showMessageDialog(this, "Libro con ID " + id + " no encontrado.", "No Encontrado", JOptionPane.WARNING_MESSAGE);
+            String titulo = txtTitulo.getText();
+            Date fechaPublicacion = new Date(dateFormat.parse(txtFechaPublicacion.getText()).getTime());
+            String selectedAutorName = (String) cmbAutor.getSelectedItem();
+            Integer idAutor = autorMap.get(selectedAutorName);
+
+            if (idAutor == null) {
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                JOptionPane.showMessageDialog(this, "Autor no válido seleccionado.", "Error", JOptionPane.ERROR_MESSAGE);
+                resetJOptionPaneColors();
+                return;
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Por favor, ingrese un ID válido (número entero).", "ID Inválido", JOptionPane.ERROR_MESSAGE);
+
+            Libro libro = new Libro(titulo, fechaPublicacion, idAutor);
+            Libro createdLibro = libroDAO.create(libro);
+
+            if (createdLibro != null) {
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                JOptionPane.showMessageDialog(this, "Libro guardado exitosamente con ID: " + createdLibro.getId(), "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                resetJOptionPaneColors();
+                loadLibros();
+                clearFields();
+            }
+        } catch (ParseException e) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Formato de fecha inválido. UsebeginPath-MM-DD.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
+            e.printStackTrace();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error de base de datos al buscar: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Error al guardar libro: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
             ex.printStackTrace();
         }
     }
 
     private void actualizarLibro() {
-        String idText = txtId.getText().trim();
-        String titulo = txtTitulo.getText().trim();
-        String fechaPublicacionStr = txtFechaPublicacion.getText().trim();
-        String idAutorStr = txtIdAutor.getText().trim();
-
-        if (idText.isEmpty() || titulo.isEmpty() || fechaPublicacionStr.isEmpty() || idAutorStr.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Por favor, complete todos los campos y asegúrese de que el ID esté presente.", "Campos Vacíos", JOptionPane.WARNING_MESSAGE);
+        if (txtId.getText().isEmpty() || txtTitulo.getText().isEmpty() || txtFechaPublicacion.getText().isEmpty() || cmbAutor.getSelectedItem() == null) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Seleccione un libro de la tabla y complete todos los campos.", "Campos Vacíos", JOptionPane.WARNING_MESSAGE);
+            resetJOptionPaneColors();
             return;
         }
 
         try {
-            int id = Integer.parseInt(idText);
-            Date fechaPublicacion = Date.valueOf(LocalDate.parse(fechaPublicacionStr));
-            int idAutor = Integer.parseInt(idAutorStr);
+            int id = Integer.parseInt(txtId.getText());
+            String titulo = txtTitulo.getText();
+            Date fechaPublicacion = new Date(dateFormat.parse(txtFechaPublicacion.getText()).getTime());
+            String selectedAutorName = (String) cmbAutor.getSelectedItem();
+            Integer idAutor = autorMap.get(selectedAutorName);
+
+            if (idAutor == null) {
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                JOptionPane.showMessageDialog(this, "Autor no válido seleccionado.", "Error", JOptionPane.ERROR_MESSAGE);
+                resetJOptionPaneColors();
+                return;
+            }
 
             Libro libro = new Libro(id, titulo, fechaPublicacion, idAutor);
             boolean updated = libroDAO.update(libro);
 
             if (updated) {
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
                 JOptionPane.showMessageDialog(this, "Libro actualizado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos();
-                cargarTodosLibros(); // Refresca la tabla
+                resetJOptionPaneColors();
+                loadLibros();
+                clearFields();
             } else {
-                JOptionPane.showMessageDialog(this, "Error al actualizar el libro. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                JOptionPane.showMessageDialog(this, "No se pudo actualizar el libro. ID no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+                resetJOptionPaneColors();
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "ID o ID Autor inválido. Por favor, ingrese números enteros.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
-        } catch (IllegalArgumentException e) {
-            JOptionPane.showMessageDialog(this, "Formato de fecha inválido. Use YYYY-MM-DD.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+        } catch (ParseException e) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Formato de fecha inválido. UsebeginPath-MM-DD.", "Error de Formato", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
+            e.printStackTrace();
         } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error de base de datos al actualizar: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Error al actualizar libro: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+            resetJOptionPaneColors();
             ex.printStackTrace();
         }
     }
 
     private void eliminarLibro() {
-        String idText = txtId.getText().trim();
-        if (idText.isEmpty()) {
-            idText = JOptionPane.showInputDialog(this, "Ingrese el ID del libro a eliminar:");
-            if (idText == null || idText.trim().isEmpty()) {
-                return;
-            }
-        }
-
-        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro de que desea eliminar este libro?", "Confirmar Eliminación", JOptionPane.YES_NO_OPTION);
-        if (confirm == JOptionPane.NO_OPTION) {
+        if (txtId.getText().isEmpty()) {
+            setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+            JOptionPane.showMessageDialog(this, "Seleccione un libro de la tabla para eliminar.", "Ningún Libro Seleccionado", JOptionPane.WARNING_MESSAGE);
+            resetJOptionPaneColors();
             return;
         }
 
-        try {
-            int id = Integer.parseInt(idText);
-            boolean deleted = libroDAO.delete(id);
+        setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+        int confirm = JOptionPane.showConfirmDialog(this, "¿Está seguro que desea eliminar este libro?", "Confirmar Eliminación", JOptionPane.YES_NO_OPTION);
+        resetJOptionPaneColors();
 
-            if (deleted) {
-                JOptionPane.showMessageDialog(this, "Libro eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                limpiarCampos();
-                cargarTodosLibros(); // Refresca la tabla
-            } else {
-                JOptionPane.showMessageDialog(this, "Error al eliminar el libro. Asegúrese que el ID exista.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (confirm == JOptionPane.YES_OPTION) {
+            int id = Integer.parseInt(txtId.getText());
+            try {
+                boolean deleted = libroDAO.delete(id);
+                if (deleted) {
+                    setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                    JOptionPane.showMessageDialog(this, "Libro eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    resetJOptionPaneColors();
+                    loadLibros();
+                    clearFields();
+                } else {
+                    setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                    JOptionPane.showMessageDialog(this, "No se pudo eliminar el libro. ID no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
+                    resetJOptionPaneColors();
+                }
+            } catch (SQLException ex) {
+                setJOptionPaneColors(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN, PaletaColores.CREAM_WHITE);
+                JOptionPane.showMessageDialog(this, "Error al eliminar libro: " + ex.getMessage(), "Error de Base de Datos", JOptionPane.ERROR_MESSAGE);
+                resetJOptionPaneColors();
+                ex.printStackTrace();
             }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Por favor, ingrese un ID válido (número entero).", "ID Inválido", JOptionPane.ERROR_MESSAGE);
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error de base de datos al eliminar: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
         }
     }
 
-    private void limpiarCampos() {
+    private void clearFields() {
         txtId.setText("");
         txtTitulo.setText("");
         txtFechaPublicacion.setText("");
-        txtIdAutor.setText("");
+        cmbAutor.setSelectedIndex(-1);
+        librosTable.clearSelection();
     }
 
-    private void cargarTodosLibros() {
-        tableModel.setRowCount(0); // Limpia el modelo de la tabla
-        try {
-            List<Libro> libros = libroDAO.getAllLibros();
-            if (libros.isEmpty()) {
-                tableModel.addRow(new Object[]{"No hay libros", "", "", "", ""}); // Mensaje en la tabla
-            } else {
-                for (Libro libro : libros) {
-                    // Opcional: Obtener el nombre del autor para mostrarlo en la tabla
-                    String nombreAutor = "Desconocido";
-                    try {
-                        Autor autor = autorDAO.obtenerAutorPorId(libro.getIdAutor());
-                        if (autor != null) {
-                            nombreAutor = autor.getNombreCompleto();
-                        }
-                    } catch (SQLException e) {
-                        System.err.println("Error al obtener el nombre del autor para ID " + libro.getIdAutor() + ": " + e.getMessage());
-                        // No es crítico para el funcionamiento de LibroForm, pero se registra el error.
-                    }
-
-                    Object[] rowData = {
-                            libro.getId(),
-                            libro.getTitulo(),
-                            libro.getFechaPublicacion(),
-                            libro.getIdAutor(),
-                            nombreAutor // Muestra el nombre del autor
-                    };
-                    tableModel.addRow(rowData);
-                }
-            }
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error al cargar libros: " + ex.getMessage(), "Error SQL", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
+    // Métodos para estilizar JOptionPane
+    private void setJOptionPaneColors(Color backgroundColor, Color foregroundColor) {
+        UIManager.put("OptionPane.background", backgroundColor);
+        UIManager.put("Panel.background", backgroundColor);
+        UIManager.put("OptionPane.messageForeground", foregroundColor);
+        UIManager.put("Button.background", PaletaColores.PRIMARY_BROWN);
+        UIManager.put("Button.foreground", PaletaColores.CREAM_WHITE);
+        UIManager.put("Button.border", BorderFactory.createLineBorder(PaletaColores.ACCENT_GOLD, 1));
+        UIManager.put("Button.font", new Font("Serif", Font.BOLD, 12));
     }
 
-    // Método principal para ejecutar el formulario
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new LibroForm().setVisible(true);
-            }
-        });
+    private void resetJOptionPaneColors() {
+        UIManager.put("OptionPane.background", null);
+        UIManager.put("Panel.background", null);
+        UIManager.put("OptionPane.messageForeground", null);
+        UIManager.put("Button.background", null);
+        UIManager.put("Button.foreground", null);
+        UIManager.put("Button.border", null);
+        UIManager.put("Button.font", null);
     }
 }
