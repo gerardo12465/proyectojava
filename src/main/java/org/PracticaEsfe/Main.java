@@ -59,11 +59,11 @@ public class Main extends JFrame {
         // Configuración del Panel del Menú Principal (contenido original de Main)
         JPanel mainMenuPanel = createMainMenuPanel();
 
-        // --- NEW: Wrap mainMenuPanel to center it and apply its own rounded border ---
+        // --- Wrapped mainMenuPanel to center it and apply its own rounded border ---
         JPanel centeredMainMenuWrapper = new JPanel(new GridBagLayout());
         centeredMainMenuWrapper.setOpaque(false); // Make wrapper transparent
         centeredMainMenuWrapper.add(mainMenuPanel); // Add the main menu panel to the wrapper
-        // --- END NEW ---
+        // --- END Wrapper ---
 
         cardPanel.add(centeredMainMenuWrapper, "MainMenu"); // Add the wrapper as a card
 
@@ -90,16 +90,12 @@ public class Main extends JFrame {
     private JPanel createMainMenuPanel() {
         JPanel mainContentPanel = new JPanel(new BorderLayout(20, 20));
         mainContentPanel.setBackground(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN);
-        mainContentPanel.setBorder(new EmptyBorder(40, 40, 40, 40));
-
-        // --- NEW: Apply RoundedBorder to the mainContentPanel itself ---
         mainContentPanel.setBorder(
                 BorderFactory.createCompoundBorder(
                         new RoundedBorder(30, PaletaColores.PRIMARY_BROWN, 2), // Adjust corner radius as needed
                         new EmptyBorder(40, 40, 40, 40) // Original padding
                 )
         );
-        // --- END NEW ---
 
         JLabel menuTitle = new JLabel("Menú de Administración", SwingConstants.CENTER);
         menuTitle.setFont(new Font("Serif", Font.BOLD, 32));
@@ -135,11 +131,17 @@ public class Main extends JFrame {
 
     // Método para aplicar estilos a los botones (tamaño más pequeño)
     private void styleButton(JButton button) {
-        button.setBackground(PaletaColores.PRIMARY_BROWN);
-        button.setForeground(PaletaColores.TEXT_DARK);
+        // --- CAMBIO AQUÍ: Usamos PaletaColores.LIGHT_BROWN para el fondo del botón ---
+        button.setBackground(PaletaColores.LIGHT_BROWN);
+        // --- También podrías cambiar el color del borde si deseas que coincida con el fondo ---
+        button.setBorder(new RoundedBorder(25, PaletaColores.LIGHT_BROWN, 2)); // Borde del mismo color
+        // --- O mantener el borde original si lo prefieres: PaletaColores.PRIMARY_BROWN ---
+        // button.setBorder(new RoundedBorder(25, PaletaColores.PRIMARY_BROWN, 2));
+
+
+        button.setForeground(PaletaColores.TEXT_DARK); // Mantener el texto oscuro o ajustarlo si no contrasta bien
         button.setFont(new Font("Arial", Font.BOLD, 16)); // Fuente ligeramente más pequeña
         button.setFocusPainted(false);
-        button.setBorder(new RoundedBorder(25, PaletaColores.PRIMARY_BROWN, 2));
         button.setPreferredSize(new Dimension(180, 50)); // Reducido el tamaño de los botones
         button.setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
