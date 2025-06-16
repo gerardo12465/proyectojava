@@ -226,7 +226,7 @@ public class LoginForm extends JFrame {
         }
     }
 
-    private void clearFields() {
+    public void clearFields() {
         txtEmail.setText("");
         txtPassword.setText("");
     }
