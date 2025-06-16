@@ -1,7 +1,8 @@
-package org.PracticaEsfe.Utilidades; // Asegúrate de que está en el paquete correcto
+package org.PracticaEsfe.Utilidades;
 
 import javax.swing.border.Border;
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
 
 public class RoundedBorder implements Border {
     private int radius;
@@ -16,12 +17,13 @@ public class RoundedBorder implements Border {
 
     @Override
     public Insets getBorderInsets(Component c) {
-        return new Insets(radius + 1, radius + 1, radius + 2, radius);
+        // Ajusta los insets para que el contenido no se solape con el borde redondeado
+        return new Insets(radius / 2 + 1, radius / 2 + 1, radius / 2 + 2, radius / 2 + 1);
     }
 
     @Override
     public boolean isBorderOpaque() {
-        return false;
+        return true; // El borde es opaco
     }
 
     @Override
@@ -29,10 +31,13 @@ public class RoundedBorder implements Border {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Dibuja el borde redondeado
+        // Dibuja el borde con el color y grosor especificados
         g2.setColor(color);
         g2.setStroke(new BasicStroke(thickness));
-        g2.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+        // Ajusta las coordenadas y el tamaño para dibujar el borde correctamente
+        g2.draw(new RoundRectangle2D.Double(x + thickness / 2, y + thickness / 2,
+                width - thickness, height - thickness,
+                radius, radius));
 
         g2.dispose();
     }

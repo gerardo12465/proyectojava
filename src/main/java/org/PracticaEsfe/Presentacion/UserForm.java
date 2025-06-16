@@ -5,6 +5,8 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 
 import org.PracticaEsfe.Dominio.Usuario;
@@ -25,15 +27,16 @@ public class UserForm extends JFrame {
     private JButton saveButton;
     private JButton cancelButton;
 
-    private ImageIcon backgroundImage; // <--- MOVIDO AQUÍ: Declaración como campo de la clase
+    private ImageIcon backgroundImage; // Declarada como campo de clase
 
-    // Agrega una referencia al LoginForm si necesitas volver a mostrarlo
-    private LoginForm parentLoginForm;
+    private LoginForm parentLoginForm; // Referencia al LoginForm padre
 
+    // Constructor sin argumentos (para pruebas directas)
     public UserForm() {
-        this(null); // Llama al constructor que acepta un LoginForm y pasa null
+        this(null); // Llama al constructor principal con null
     }
 
+    // Constructor principal que acepta el LoginForm padre
     public UserForm(LoginForm parentLoginForm) {
         super("Registro de Usuario");
         this.parentLoginForm = parentLoginForm; // Guarda la referencia
@@ -42,12 +45,15 @@ public class UserForm extends JFrame {
         setSize(700, 500); // Mismo tamaño que LoginForm
         setLocationRelativeTo(null);
 
-        // Intenta cargar la imagen de fondo, similar a LoginForm
-        // AQUI SOLO SE ASIGNA EL VALOR A LA VARIABLE DE INSTANCIA YA DECLARADA
+        // Carga la imagen de fondo una sola vez y la asigna a la variable de instancia
         try {
             backgroundImage = new ImageIcon(getClass().getResource("/images/biblioteca.png"));
+            if (backgroundImage.getImageLoadStatus() == MediaTracker.ERRORED) {
+                System.err.println("Error al cargar la imagen de fondo desde recursos: " + getClass().getResource("/images/biblioteca.png"));
+                backgroundImage = new ImageIcon("https://placehold.co/700x500/8B4513/FFFFFF?text=Fondo+no+disponible");
+            }
         } catch (Exception e) {
-            System.err.println("Error al cargar la imagen de fondo local 'biblioteca.png': " + e.getMessage());
+            System.err.println("Excepción al intentar cargar la imagen de fondo 'biblioteca.png': " + e.getMessage());
             backgroundImage = new ImageIcon("https://placehold.co/700x500/8B4513/FFFFFF?text=Fondo+no+disponible");
         }
 
@@ -55,7 +61,6 @@ public class UserForm extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Ahora backgroundImage es un campo de clase, por lo tanto, es accesible y efectivamente final.
                 if (backgroundImage != null && backgroundImage.getImage() != null) {
                     g.drawImage(backgroundImage.getImage(), 0, 0, getWidth(), getHeight(), this);
                 } else {
@@ -66,120 +71,119 @@ public class UserForm extends JFrame {
         };
         backgroundPanel.setLayout(new GridBagLayout());
 
-        mainPanel = new JPanel(new BorderLayout(10, 10)); // Mismo layout que loginContentPanel
-        mainPanel.setBackground(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN); // Color semitransparente
-        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20)); // Mismo borde
+        mainPanel = new JPanel(new BorderLayout(10, 10));
+        mainPanel.setBackground(PaletaColores.SEMI_TRANSPARENT_PRIMARY_BROWN);
+        mainPanel.setBorder(new EmptyBorder(20, 20, 20, 20));
 
         titleLabel = new JLabel("Registro de Nuevo Usuario", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Serif", Font.BOLD, 28)); // Mismo tamaño de fuente que el título de LoginForm
-        titleLabel.setForeground(PaletaColores.CREAM_WHITE); // Mismo color de fuente
-        titleLabel.setBorder(new EmptyBorder(10, 0, 10, 0)); // Mismo borde
+        titleLabel.setFont(new Font("Serif", Font.BOLD, 28));
+        titleLabel.setForeground(PaletaColores.CREAM_WHITE);
+        titleLabel.setBorder(new EmptyBorder(10, 0, 10, 0));
         mainPanel.add(titleLabel, BorderLayout.NORTH);
 
-        // Panel para los campos de entrada usando GridBagLayout para centrar y alinear
         JPanel inputFieldsPanel = new JPanel(new GridBagLayout());
-        inputFieldsPanel.setOpaque(false); // Hacer transparente para que se vea el fondo
+        inputFieldsPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 0, 10, 0); // Espaciado entre componentes
+        gbc.insets = new Insets(10, 0, 10, 0);
 
-        // Configuración común para las etiquetas
         Font labelFont = new Font("Arial", Font.BOLD, 14);
         Color labelColor = PaletaColores.CREAM_WHITE;
-        Dimension fieldSize = new Dimension(250, 35); // Ancho y alto deseado para los campos
+        Dimension fieldSize = new Dimension(250, 35);
 
         // Nombre
-        gbc.gridx = 0; // Columna 0
-        gbc.gridy = 0; // Fila 0
-        gbc.anchor = GridBagConstraints.EAST; // Alinea a la derecha
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
         nameLabel = new JLabel("Nombre:");
         nameLabel.setForeground(labelColor);
         nameLabel.setFont(labelFont);
         inputFieldsPanel.add(nameLabel, gbc);
 
-        gbc.gridx = 1; // Columna 1
-        gbc.gridy = 0; // Fila 0
-        gbc.anchor = GridBagConstraints.WEST; // Alinea a la izquierda
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
         nameField = new JTextField(20);
         nameField.setBackground(PaletaColores.CREAM_WHITE);
         nameField.setForeground(PaletaColores.TEXT_DARK);
         nameField.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
-        nameField.setPreferredSize(fieldSize); // Aplicar tamaño
+        nameField.setPreferredSize(fieldSize);
         inputFieldsPanel.add(nameField, gbc);
 
         // Email
-        gbc.gridx = 0; // Columna 0
-        gbc.gridy = 1; // Fila 1
+        gbc.gridx = 0;
+        gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
         emailLabel = new JLabel("Email:");
         emailLabel.setForeground(labelColor);
         emailLabel.setFont(labelFont);
         inputFieldsPanel.add(emailLabel, gbc);
 
-        gbc.gridx = 1; // Columna 1
-        gbc.gridy = 1; // Fila 1
+        gbc.gridx = 1;
+        gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.WEST;
         emailField = new JTextField(20);
         emailField.setBackground(PaletaColores.CREAM_WHITE);
         emailField.setForeground(PaletaColores.TEXT_DARK);
         emailField.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
-        emailField.setPreferredSize(fieldSize); // Aplicar tamaño
+        emailField.setPreferredSize(fieldSize);
         inputFieldsPanel.add(emailField, gbc);
 
         // Contraseña
-        gbc.gridx = 0; // Columna 0
-        gbc.gridy = 2; // Fila 2
+        gbc.gridx = 0;
+        gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.EAST;
         passwordLabel = new JLabel("Contraseña:");
         passwordLabel.setForeground(labelColor);
         passwordLabel.setFont(labelFont);
         inputFieldsPanel.add(passwordLabel, gbc);
 
-        gbc.gridx = 1; // Columna 1
-        gbc.gridy = 2; // Fila 2
+        gbc.gridx = 1;
+        gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         passwordField = new JPasswordField(20);
         passwordField.setBackground(PaletaColores.CREAM_WHITE);
         passwordField.setForeground(PaletaColores.TEXT_DARK);
         passwordField.setBorder(BorderFactory.createLineBorder(PaletaColores.PRIMARY_BROWN, 1));
-        passwordField.setPreferredSize(fieldSize); // Aplicar tamaño
+        passwordField.setPreferredSize(fieldSize);
         inputFieldsPanel.add(passwordField, gbc);
 
         // Panel para los botones (centrados y con estilo)
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0)); // Centrado, 20px de espacio entre botones
-        buttonPanel.setOpaque(false); // Transparente
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+        buttonPanel.setOpaque(false);
 
         saveButton = new JButton("Guardar");
-        saveButton.setBackground(PaletaColores.PRIMARY_BROWN);
-        saveButton.setForeground(PaletaColores.CREAM_WHITE);
-        saveButton.setFont(new Font("Arial", Font.BOLD, 16)); // Mismo tamaño de fuente que el botón de login
+        saveButton.setBackground(PaletaColores.PRIMARY_BROWN); // Color de fondo del botón
+        saveButton.setForeground(PaletaColores.CREAM_WHITE);   // Color del texto del botón
+        saveButton.setFont(new Font("Arial", Font.BOLD, 16));
         saveButton.setFocusPainted(false);
         saveButton.setBorder(new RoundedBorder(25, PaletaColores.PRIMARY_BROWN, 2)); // Borde redondeado
-        saveButton.setPreferredSize(new Dimension(150, 50)); // Tamaño de botón
+        saveButton.setPreferredSize(new Dimension(150, 50));
+        saveButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         buttonPanel.add(saveButton);
 
         cancelButton = new JButton("Cancelar");
-        cancelButton.setBackground(PaletaColores.PRIMARY_BROWN);
-        cancelButton.setForeground(PaletaColores.CREAM_WHITE);
-        cancelButton.setFont(new Font("Arial", Font.BOLD, 16)); // Mismo tamaño de fuente que el botón de login
+        cancelButton.setBackground(PaletaColores.PRIMARY_BROWN); // Color de fondo del botón
+        cancelButton.setForeground(PaletaColores.CREAM_WHITE);   // Color del texto del botón
+        cancelButton.setFont(new Font("Arial", Font.BOLD, 16));
         cancelButton.setFocusPainted(false);
         cancelButton.setBorder(new RoundedBorder(25, PaletaColores.PRIMARY_BROWN, 2)); // Borde redondeado
-        cancelButton.setPreferredSize(new Dimension(150, 50)); // Tamaño de botón
+        cancelButton.setPreferredSize(new Dimension(150, 50));
+        cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         buttonPanel.add(cancelButton);
 
-        // Panel central que agrupa los campos de entrada y los botones
         JPanel centerContentPanel = new JPanel();
         centerContentPanel.setLayout(new BoxLayout(centerContentPanel, BoxLayout.Y_AXIS));
         centerContentPanel.setOpaque(false);
-        centerContentPanel.setBorder(new EmptyBorder(15, 0, 15, 0)); // Espaciado vertical
+        centerContentPanel.setBorder(new EmptyBorder(15, 0, 15, 0));
 
         centerContentPanel.add(inputFieldsPanel);
-        centerContentPanel.add(Box.createVerticalStrut(30)); // Espacio entre campos y botones
+        centerContentPanel.add(Box.createVerticalStrut(30));
         centerContentPanel.add(buttonPanel);
 
         mainPanel.add(centerContentPanel, BorderLayout.CENTER);
 
-        backgroundPanel.add(mainPanel); // Añade el panel principal al panel de fondo
-        add(backgroundPanel); // Añade el panel de fondo al frame
+        backgroundPanel.add(mainPanel);
+        add(backgroundPanel);
 
         // Acción del botón Guardar
         saveButton.addActionListener(new ActionListener() {
@@ -199,7 +203,7 @@ public class UserForm extends JFrame {
                     return;
                 }
 
-                UserDAO userDAO = new UserDAO();
+                UserDAO userDAO = new UserDAO(); // Instancia de UserDAO
 
                 try {
                     Usuario existingUser = userDAO.findByEmail(email);
@@ -223,11 +227,11 @@ public class UserForm extends JFrame {
                                 "Registro Exitoso",
                                 JOptionPane.INFORMATION_MESSAGE);
                         resetJOptionPaneColors();
-                        dispose();
-                        // Si se pasó un LoginForm, muéstralo al cerrar esta ventana
+                        dispose(); // Cierra esta ventana (UserForm)
+                        // Si el LoginForm padre existe, lo hace visible y limpia sus campos
                         if (parentLoginForm != null) {
                             parentLoginForm.setVisible(true);
-                            parentLoginForm.clearFields(); // Limpiar campos del LoginForm
+                            parentLoginForm.clearFields();
                         }
 
                     } else {
@@ -254,17 +258,29 @@ public class UserForm extends JFrame {
         cancelButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                dispose();
-                // Si se pasó un LoginForm, muéstralo al cerrar esta ventana
+                dispose(); // Cierra esta ventana (UserForm)
+                // Si el LoginForm padre existe, lo hace visible y limpia sus campos
                 if (parentLoginForm != null) {
                     parentLoginForm.setVisible(true);
-                    parentLoginForm.clearFields(); // Limpiar campos del LoginForm
+                    parentLoginForm.clearFields();
+                }
+            }
+        });
+
+        // Añadir WindowListener para manejar el cierre de la ventana UserForm (por la 'X' o Alt+F4)
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                // Si el LoginForm padre existe, lo hace visible y limpia sus campos
+                if (parentLoginForm != null) {
+                    parentLoginForm.setVisible(true);
+                    parentLoginForm.clearFields();
                 }
             }
         });
     }
 
-    // Métodos para cambiar los colores de JOptionPane
+    // Configura los colores para los JOptionPane
     private void setJOptionPaneColors(Color backgroundColor, Color foregroundColor) {
         UIManager.put("OptionPane.background", backgroundColor);
         UIManager.put("Panel.background", backgroundColor);
@@ -275,6 +291,7 @@ public class UserForm extends JFrame {
         UIManager.put("Button.font", new Font("Arial", Font.BOLD, 12));
     }
 
+    // Restablece los colores predeterminados de JOptionPane
     private void resetJOptionPaneColors() {
         UIManager.put("OptionPane.background", null);
         UIManager.put("Panel.background", null);
@@ -285,6 +302,7 @@ public class UserForm extends JFrame {
         UIManager.put("Button.font", null);
     }
 
+    // Métodos para obtener los datos de entrada (si se necesitan desde fuera de la clase)
     public String getNameInput() {
         return nameField.getText();
     }
